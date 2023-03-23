@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: release-automation-action
+  description: Automation tool for sdk deployment
+  annotations:
+    github.com/project-slug: sendbird/release-automation-action
+spec:
+  type: library
+  lifecycle: production
+  owner: dep-client-platform
+  system: sendbird-internal-tools

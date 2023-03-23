@@ -1,9 +1,17 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "release-automation-action",
+  "version": "0.0.1",
   "private": true,
-  "description": "TypeScript template action",
-  "main": "lib/main.js",
+  "description": "Sendbird Automate release process with GitHub Actions",
+  "license": "MIT",
+  "author": {
+    "name": "Airen Kang",
+    "email": "airen.kang@sendbird.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sendbird/release-automation-action.git"
+  },
   "scripts": {
     "build": "tsc",
     "format": "prettier --write '**/*.ts'",
@@ -13,19 +21,14 @@
     "test": "jest",
     "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
-  },
-  "keywords": [
-    "actions",
-    "node",
-    "setup"
-  ],
-  "author": "",
-  "license": "MIT",
+  "main": "lib/main.js",
   "dependencies": {
-    "@actions/core": "^1.10.0"
+    "@actions/core": "^1.10.0",
+    "@actions/exec": "^1.1.1",
+    "@actions/github": "^5.1.1",
+    "@octokit/webhooks-definitions": "^3.67.3",
+    "@types/node-fetch": "^2.6.2",
+    "node-fetch": "^2.6.9"
   },
   "devDependencies": {
     "@types/node": "^18.11.0",

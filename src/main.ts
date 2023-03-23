@@ -1,19 +1,85 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import * as github from '@actions/github'
+import * as exec from '@actions/exec'
+import type {
+  IssueCommentCreatedEvent,
+  WebhookEventName
+} from '@octokit/webhooks-definitions/schema'
+import {buildCommand} from './command'
+import {SENDBIRD_BOT_USERNAME} from './constants'
+
+// https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
+// CIRCLECI_TOKEN: 1Password > Circle API Token
+const circleci_token = core.getInput('circleci_token')
+const gh_token = core.getInput('gh_token')
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+    if ((github.context.eventName as WebhookEventName) === 'issue_comment') {
+      const payload = github.context.payload as IssueCommentCreatedEvent
+      const octokit = github.getOctokit(gh_token)
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+      const pull = await octokit.rest.pulls.get({
+        ...github.context.repo,
+        pull_number: github.context.issue.number
+      })
 
-    core.setOutput('time', new Date().toTimeString())
+      const comment = payload.comment.body.toLowerCase()
+      const command = buildCommand(comment, {
+        gh_token,
+        circleci_token,
+        octokit,
+        branch: pull.data.head.ref,
+        isPRComment: payload.comment.html_url.includes('pull')
+      })
+
+      if (command) {
+        const hasPermission = await checkPermission(
+          payload.comment.user.login,
+          octokit
+        )
+
+        if (hasPermission) await command.run()
+        else core.info('No permission to run command')
+      }
+    }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
+}
+
+async function checkPermission(
+  username: string,
+  octokit: ReturnType<typeof github.getOctokit>
+) {
+  if (
+    username === github.context.repo.owner ||
+    username === SENDBIRD_BOT_USERNAME
+  ) {
+    return true
+  }
+
+  try {
+    const response = await octokit.rest.repos.checkCollaborator({
+      ...github.context.repo,
+      username
+    })
+    return response.status === 204
+  } catch (e) {
+    return false
+  }
+}
+
+async function execInputCommands(name: string): Promise<void> {
+  const tasks = core
+    .getInput(name)
+    .split('\n')
+    .map(command => () => exec.exec(command))
+
+  await tasks.reduce(async (promise, task) => {
+    await promise
+    return task()
+  }, Promise.resolve(0))
 }
 
 run()
