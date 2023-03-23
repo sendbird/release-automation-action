@@ -1,0 +1,13 @@
+name: PR Comment Bot
+on:
+  issue_comment:
+    types: [created]
+jobs:
+  pr-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./
+        with:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          circleci_token: ${{ secrets.CIRCLECI_TOKEN }}
