@@ -1,11 +1,13 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Airen Kang'
+description: 'GitHub action for release automation'
+author: 'Airen Kang'
 inputs:
-  milliseconds: # change this
+  gh_token:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'Input GitHub access token here'
+  circleci_token:
+    required: true
+    description: 'Input CircleCI API token here'
 runs:
   using: 'node16'
   main: 'dist/index.js'
