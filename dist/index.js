@@ -55,8 +55,9 @@ class CreateCommand extends command_1.CommandAbstract {
     }
     createTicket() {
         return __awaiter(this, void 0, void 0, function* () {
+            const repo = `${github.context.repo.owner}/${github.context.repo.repo}`;
             // Add a comment about preparing ticket creation
-            yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${github.context.repo.repo}/actions/runs/${github.context.runId}` }));
+            yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${repo}/actions/runs/${github.context.runId}` }));
             // Get pr head branch
             if (!this.args.isReleaseBranch) {
                 return core.info("it's not releasable 🙅");
@@ -66,7 +67,7 @@ class CreateCommand extends command_1.CommandAbstract {
             }
             // Trigger ticket creation
             // NOTE: It would be better to implement pipeline to sendbird/sdk-deployment directly
-            const response = yield (0, node_fetch_1.default)(`https://circleci.com/api/v2/project/gh/${github.context.repo.owner}/${github.context.repo.repo}/pipeline`, {
+            const response = yield (0, node_fetch_1.default)(`https://circleci.com/api/v2/project/gh/${repo}/pipeline`, {
                 method: 'POST',
                 headers: {
                     'Circle-Token': this.args.circleci_token,
@@ -83,7 +84,7 @@ class CreateCommand extends command_1.CommandAbstract {
             const result = (yield response.json());
             core.info(`api result: ${JSON.stringify(response, null, 2)}`);
             // Add a comment about processing ticket creation
-            yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] In progress https://app.circleci.com/pipelines/github/${github.context.repo.owner}/${github.context.repo.repo}/${result.number}` }));
+            yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] In progress https://app.circleci.com/pipelines/github/${repo}/${result.number}` }));
         });
     }
 }
@@ -115,17 +116,40 @@ exports.CommandAbstract = CommandAbstract;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.buildCommand = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const constants_1 = __nccwpck_require__(5105);
 const command_create_1 = __importDefault(__nccwpck_require__(4762));
 function buildCommand(text, args) {
-    if (!text.startsWith(constants_1.COMMAND_TRIGGER) || !args.isPRComment)
+    if (!text.startsWith(constants_1.COMMAND_TRIGGER) || !args.isPRComment) {
+        core.info('Invalid command or not a PR comment');
         return null;
-    const [action, target] = text.replace(constants_1.COMMAND_TRIGGER, '').trim();
+    }
+    const [action, target] = text.replace(constants_1.COMMAND_TRIGGER, '').trim().split(' ');
+    core.info(`Command: ${action} ${target}`);
     switch (action) {
         case 'create':
             return new command_create_1.default(target, args);
@@ -196,13 +220,15 @@ function run() {
         try {
             if (github.context.eventName === 'issue_comment') {
                 const pushPayload = github.context.payload;
-                const isPRComment = pushPayload.comment.html_url.includes('pull');
-                const isReleaseBranch = Boolean(github.context.ref.startsWith(constants_1.BRANCH_RELEASE_PREFIX) ||
-                    github.context.ref.startsWith(constants_1.BRANCH_HOTFIX_PREFIX));
                 // CIRCLECI_TOKEN: 1Password > sha.sdk_deployment > Circle API Token
                 const circleci_token = core.getInput('circleci_token');
                 const gh_token = core.getInput('gh_token');
                 const octokit = github.getOctokit(gh_token);
+                const { data: pull } = yield octokit.rest.pulls.get(Object.assign(Object.assign({}, github.context.repo), { pull_number: github.context.issue.number }));
+                core.info(`pull head ref: ${pull.head.ref}`);
+                const isPRComment = pushPayload.comment.html_url.includes('pull');
+                const isReleaseBranch = Boolean(pull.head.ref.startsWith(constants_1.BRANCH_RELEASE_PREFIX) ||
+                    pull.head.ref.startsWith(constants_1.BRANCH_HOTFIX_PREFIX));
                 const command = (0, command_1.buildCommand)(pushPayload.comment.body, {
                     gh_token,
                     circleci_token,

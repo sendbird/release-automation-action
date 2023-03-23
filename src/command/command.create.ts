@@ -14,11 +14,12 @@ export default class CreateCommand extends CommandAbstract {
   }
 
   async createTicket(): Promise<void> {
+    const repo = `${github.context.repo.owner}/${github.context.repo.repo}`
     // Add a comment about preparing ticket creation
     await this.args.octokit.rest.issues.createComment({
       ...github.context.repo,
       issue_number: github.context.issue.number,
-      body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${github.context.repo.repo}/actions/runs/${github.context.runId}`
+      body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${repo}/actions/runs/${github.context.runId}`
     })
 
     // Get pr head branch
@@ -31,7 +32,7 @@ export default class CreateCommand extends CommandAbstract {
     // Trigger ticket creation
     // NOTE: It would be better to implement pipeline to sendbird/sdk-deployment directly
     const response = await fetch(
-      `https://circleci.com/api/v2/project/gh/${github.context.repo.owner}/${github.context.repo.repo}/pipeline`,
+      `https://circleci.com/api/v2/project/gh/${repo}/pipeline`,
       {
         method: 'POST',
         headers: {
@@ -54,7 +55,7 @@ export default class CreateCommand extends CommandAbstract {
     await this.args.octokit.rest.issues.createComment({
       ...github.context.repo,
       issue_number: github.context.issue.number,
-      body: `[Creating Ticket] In progress https://app.circleci.com/pipelines/github/${github.context.repo.owner}/${github.context.repo.repo}/${result.number}`
+      body: `[Creating Ticket] In progress https://app.circleci.com/pipelines/github/${repo}/${result.number}`
     })
   }
 }
