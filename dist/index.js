@@ -56,7 +56,6 @@ class CreateCommand extends command_1.CommandAbstract {
             const owner_repo = `${github.context.repo.owner}/${github.context.repo.repo}`;
             this.log('Add a comment about preparing ticket creation');
             yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${owner_repo}/actions/runs/${github.context.runId}` }));
-            // Get pr head branch
             if (!(0, utils_1.isReleaseBranch)(this.args.branch)) {
                 return this.log("it's not releasable 🙅");
             }

@@ -24,7 +24,6 @@ export default class CreateCommand extends CommandAbstract {
       body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${owner_repo}/actions/runs/${github.context.runId}`
     })
 
-    // Get pr head branch
     if (!isReleaseBranch(this.args.branch)) {
       return this.log("it's not releasable 🙅")
     } else {
