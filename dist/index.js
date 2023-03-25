@@ -385,14 +385,14 @@ exports.workflow = {
 };
 function buildCreateTicketParams(args) {
     const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
-    return Object.assign(Object.assign({}, basicParams), { product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version: (0, utils_1.extractVersion)(args.branch), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework')), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework')) });
+    return Object.assign(Object.assign({}, basicParams), { product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version: (0, utils_1.extractVersion)(args.branch), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework').toLowerCase()) });
 }
 function buildBasicRequestParams(workflowName) {
     return {
         [workflowName]: true,
         script_version: constants_1.WORKFLOW_SCRIPT_VERSION,
-        platform: core.getInput('platform'),
-        product: core.getInput('product'),
+        platform: core.getInput('platform').toLowerCase(),
+        product: core.getInput('product').toLowerCase(),
         repo_name: github.context.repo.repo
     };
 }

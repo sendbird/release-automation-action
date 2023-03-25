@@ -66,13 +66,13 @@ function buildCreateTicketParams(args: CommandArguments): object {
       basicParams.platform,
       basicParams.product,
       basicParams.platform,
-      core.getInput('framework')
+      core.getInput('framework').toLowerCase()
     ),
     release_jira_ticket: buildReleaseJiraTicket(
       basicParams.platform,
       basicParams.product,
       basicParams.platform,
-      core.getInput('framework')
+      core.getInput('framework').toLowerCase()
     )
   }
 }
@@ -81,8 +81,8 @@ function buildBasicRequestParams(workflowName: string): BasicRequestParams {
   return {
     [workflowName]: true,
     script_version: WORKFLOW_SCRIPT_VERSION,
-    platform: core.getInput('platform'),
-    product: core.getInput('product'),
+    platform: core.getInput('platform').toLowerCase(),
+    product: core.getInput('product').toLowerCase(),
     repo_name: github.context.repo.repo
   }
 }
