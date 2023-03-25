@@ -3,7 +3,7 @@ import * as github from '@actions/github'
 import fetch from 'node-fetch'
 
 import type {CommandArguments} from './command/command'
-import {WORKFLOW_REPO, WORKFLOW_SCRIPT_VERSION} from './constants'
+import {WORKFLOW_REPO, WORKFLOW_SCRIPT_VERSION, WORKFLOWS} from './constants'
 import {
   buildReleaseJiraTicket,
   buildReleaseJiraVersion,
@@ -54,10 +54,9 @@ export const workflow = {
   }
 }
 function buildCreateTicketParams(args: CommandArguments): object {
-  const basicParams = buildBasicRequestParams()
+  const basicParams = buildBasicRequestParams(WORKFLOWS.CREATE_TICKET)
   return {
     ...basicParams,
-    run_workflow_create_ticket: true,
     product_jira_project_key: core.getInput('product_jira_project_key'),
     product_jira_version_prefix: core.getInput('product_jira_version_prefix'),
     release_branch: args.branch,
@@ -78,8 +77,9 @@ function buildCreateTicketParams(args: CommandArguments): object {
   }
 }
 
-function buildBasicRequestParams(): BasicRequestParams {
+function buildBasicRequestParams(workflowName: string): BasicRequestParams {
   return {
+    [workflowName]: true,
     script_version: WORKFLOW_SCRIPT_VERSION,
     platform: core.getInput('platform'),
     product: core.getInput('product'),

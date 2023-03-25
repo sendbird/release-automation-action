@@ -39,11 +39,12 @@ const github = __importStar(__nccwpck_require__(5438));
 const command_1 = __nccwpck_require__(1521);
 const utils_1 = __nccwpck_require__(918);
 const workflow_1 = __nccwpck_require__(998);
+const constants_1 = __nccwpck_require__(5105);
 class CreateCommand extends command_1.CommandAbstract {
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             switch (this.target) {
-                case 'ticket':
+                case constants_1.COMMAND_TARGETS.TICKET:
                     return this.createTicket();
                 default:
                     return;
@@ -155,7 +156,7 @@ function buildCommand(text, args) {
     }
     const [action, target] = text.replace(constants_1.COMMAND_TRIGGER, '').trim().split(' ');
     switch (action) {
-        case 'create':
+        case constants_1.COMMAND_ACTIONS.CREATE:
             return new command_create_1.default(target, args);
         default:
             return null;
@@ -172,12 +173,21 @@ exports.buildCommand = buildCommand;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.WORKFLOW_SCRIPT_VERSION = exports.WORKFLOW_REPO = exports.BRANCH_HOTFIX_PREFIX = exports.BRANCH_RELEASE_PREFIX = exports.COMMAND_TRIGGER = void 0;
+exports.WORKFLOWS = exports.WORKFLOW_SCRIPT_VERSION = exports.WORKFLOW_REPO = exports.BRANCH_HOTFIX_PREFIX = exports.BRANCH_RELEASE_PREFIX = exports.COMMAND_TARGETS = exports.COMMAND_ACTIONS = exports.COMMAND_TRIGGER = void 0;
 exports.COMMAND_TRIGGER = '/bot';
+exports.COMMAND_ACTIONS = {
+    CREATE: 'create'
+};
+exports.COMMAND_TARGETS = {
+    TICKET: 'ticket'
+};
 exports.BRANCH_RELEASE_PREFIX = 'release';
 exports.BRANCH_HOTFIX_PREFIX = 'hotfix';
 exports.WORKFLOW_REPO = 'sendbird/sdk-deployment';
 exports.WORKFLOW_SCRIPT_VERSION = 'v1.2';
+exports.WORKFLOWS = {
+    CREATE_TICKET: 'run_workflow_create_ticket'
+};
 
 
 /***/ }),
@@ -229,12 +239,13 @@ function run() {
             if (github.context.eventName === 'issue_comment') {
                 const payload = github.context.payload;
                 const octokit = github.getOctokit(gh_token);
-                const { data: pull } = yield octokit.rest.pulls.get(Object.assign(Object.assign({}, github.context.repo), { pull_number: github.context.issue.number }));
-                const command = (0, command_1.buildCommand)(payload.comment.body, {
+                const pull = yield octokit.rest.pulls.get(Object.assign(Object.assign({}, github.context.repo), { pull_number: github.context.issue.number }));
+                const comment = payload.comment.body.toLowerCase();
+                const command = (0, command_1.buildCommand)(comment, {
                     gh_token,
                     circleci_token,
                     octokit,
-                    branch: pull.head.ref,
+                    branch: pull.data.head.ref,
                     isPRComment: payload.comment.html_url.includes('pull')
                 });
                 yield (command === null || command === void 0 ? void 0 : command.run());
@@ -374,11 +385,12 @@ exports.workflow = {
     }
 };
 function buildCreateTicketParams(args) {
-    const basicParams = buildBasicRequestParams();
-    return Object.assign(Object.assign({}, basicParams), { run_workflow_create_ticket: true, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version: (0, utils_1.extractVersion)(args.branch), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework')), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework')) });
+    const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
+    return Object.assign(Object.assign({}, basicParams), { product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version: (0, utils_1.extractVersion)(args.branch), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework')), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework')) });
 }
-function buildBasicRequestParams() {
+function buildBasicRequestParams(workflowName) {
     return {
+        [workflowName]: true,
         script_version: constants_1.WORKFLOW_SCRIPT_VERSION,
         platform: core.getInput('platform'),
         product: core.getInput('product'),

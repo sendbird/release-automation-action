@@ -17,16 +17,17 @@ async function run(): Promise<void> {
       const payload = github.context.payload as IssueCommentCreatedEvent
       const octokit = github.getOctokit(gh_token)
 
-      const {data: pull} = await octokit.rest.pulls.get({
+      const pull = await octokit.rest.pulls.get({
         ...github.context.repo,
         pull_number: github.context.issue.number
       })
 
-      const command = buildCommand(payload.comment.body, {
+      const comment = payload.comment.body.toLowerCase()
+      const command = buildCommand(comment, {
         gh_token,
         circleci_token,
         octokit,
-        branch: pull.head.ref,
+        branch: pull.data.head.ref,
         isPRComment: payload.comment.html_url.includes('pull')
       })
 

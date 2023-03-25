@@ -2,11 +2,12 @@ import * as github from '@actions/github'
 import {CommandAbstract} from './command'
 import {isReleaseBranch} from '../utils'
 import {workflow} from '../workflow'
+import {COMMAND_TARGETS} from '../constants'
 
 export default class CreateCommand extends CommandAbstract {
   async run(): Promise<void> {
     switch (this.target) {
-      case 'ticket':
+      case COMMAND_TARGETS.TICKET:
         return this.createTicket()
       default:
         return

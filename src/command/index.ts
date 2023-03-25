@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import type {Command, CommandArguments} from './command'
-import {COMMAND_TRIGGER} from '../constants'
+import {COMMAND_ACTIONS, COMMAND_TRIGGER} from '../constants'
 import CreateCommand from './command.create'
 
 export function buildCommand(
@@ -15,7 +15,7 @@ export function buildCommand(
   const [action, target] = text.replace(COMMAND_TRIGGER, '').trim().split(' ')
 
   switch (action) {
-    case 'create':
+    case COMMAND_ACTIONS.CREATE:
       return new CreateCommand(target, args)
     default:
       return null
