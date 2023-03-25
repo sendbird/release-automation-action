@@ -1,6 +1,7 @@
-# release-comment-action
+# release-automation-action
 
 This GitHub Action is designed to be used as a comment bot in a release automation process.
+
 When an PR comment is created, the action will check if the comment contains a specific command and then execute an action based on the command.
 If the conditions are met, the script extracts a command from the comment and runs it.
 
@@ -20,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: sendbird/release-comment-action@version
+      - uses: sendbird/release-automation-action@version
         with:
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           circleci_token: ${{ secrets.CIRCLECI_TOKEN }}
