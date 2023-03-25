@@ -34,14 +34,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const command_1 = __nccwpck_require__(1521);
-const node_fetch_1 = __importDefault(__nccwpck_require__(467));
+const utils_1 = __nccwpck_require__(918);
+const workflow_1 = __nccwpck_require__(998);
 class CreateCommand extends command_1.CommandAbstract {
     run() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -55,36 +53,20 @@ class CreateCommand extends command_1.CommandAbstract {
     }
     createTicket() {
         return __awaiter(this, void 0, void 0, function* () {
-            const repo = `${github.context.repo.owner}/${github.context.repo.repo}`;
+            const owner_repo = `${github.context.repo.owner}/${github.context.repo.repo}`;
             // Add a comment about preparing ticket creation
-            yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${repo}/actions/runs/${github.context.runId}` }));
+            yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${owner_repo}/actions/runs/${github.context.runId}` }));
             // Get pr head branch
-            if (!this.args.isReleaseBranch) {
+            if (!(0, utils_1.isReleaseBranch)(this.args.branch)) {
                 return core.info("it's not releasable 🙅");
             }
             else {
                 core.info("it's releasable 🚀");
             }
             // Trigger ticket creation
-            // NOTE: It would be better to implement pipeline to sendbird/sdk-deployment directly
-            const response = yield (0, node_fetch_1.default)(`https://circleci.com/api/v2/project/gh/${repo}/pipeline`, {
-                method: 'POST',
-                headers: {
-                    'Circle-Token': this.args.circleci_token,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    branch: github.context.ref,
-                    parameters: {
-                        run_workflow_create_ticket: true,
-                        release_pr_number: github.context.issue.number
-                    }
-                })
-            });
-            const result = (yield response.json());
-            core.info(`api result: ${JSON.stringify(response, null, 2)}`);
+            const { workflowUrl } = yield workflow_1.workflow.createTicket(this.args);
             // Add a comment about processing ticket creation
-            yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] In progress https://app.circleci.com/pipelines/github/${repo}/${result.number}` }));
+            yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] In progress ${workflowUrl}` }));
         });
     }
 }
@@ -94,16 +76,37 @@ exports.default = CreateCommand;
 /***/ }),
 
 /***/ 1521:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommandAbstract = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 class CommandAbstract {
     constructor(target, args) {
         this.target = target;
         this.args = args;
+        core.info(`${this.constructor.name}: ${target}`);
     }
 }
 exports.CommandAbstract = CommandAbstract;
@@ -145,11 +148,10 @@ const constants_1 = __nccwpck_require__(5105);
 const command_create_1 = __importDefault(__nccwpck_require__(4762));
 function buildCommand(text, args) {
     if (!text.startsWith(constants_1.COMMAND_TRIGGER) || !args.isPRComment) {
-        core.info('Invalid command or not a PR comment');
+        core.info('BuildCommand: Invalid command or not a PR comment');
         return null;
     }
     const [action, target] = text.replace(constants_1.COMMAND_TRIGGER, '').trim().split(' ');
-    core.info(`Command: ${action} ${target}`);
     switch (action) {
         case 'create':
             return new command_create_1.default(target, args);
@@ -168,10 +170,12 @@ exports.buildCommand = buildCommand;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BRANCH_HOTFIX_PREFIX = exports.BRANCH_RELEASE_PREFIX = exports.COMMAND_TRIGGER = void 0;
+exports.WORKFLOW_SCRIPT_VERSION = exports.WORKFLOW_REPO = exports.BRANCH_HOTFIX_PREFIX = exports.BRANCH_RELEASE_PREFIX = exports.COMMAND_TRIGGER = void 0;
 exports.COMMAND_TRIGGER = '/bot';
 exports.BRANCH_RELEASE_PREFIX = 'release';
 exports.BRANCH_HOTFIX_PREFIX = 'hotfix';
+exports.WORKFLOW_REPO = 'sendbird/sdk-deployment';
+exports.WORKFLOW_SCRIPT_VERSION = 'v1.2';
 
 
 /***/ }),
@@ -212,29 +216,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-const constants_1 = __nccwpck_require__(5105);
 const command_1 = __nccwpck_require__(2129);
 // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
+// CIRCLECI_TOKEN: 1Password > sha.sdk_deployment > Circle API Token
+const circleci_token = core.getInput('circleci_token');
+const gh_token = core.getInput('gh_token');
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             if (github.context.eventName === 'issue_comment') {
-                const pushPayload = github.context.payload;
-                // CIRCLECI_TOKEN: 1Password > sha.sdk_deployment > Circle API Token
-                const circleci_token = core.getInput('circleci_token');
-                const gh_token = core.getInput('gh_token');
+                const payload = github.context.payload;
                 const octokit = github.getOctokit(gh_token);
                 const { data: pull } = yield octokit.rest.pulls.get(Object.assign(Object.assign({}, github.context.repo), { pull_number: github.context.issue.number }));
-                core.info(`pull head ref: ${pull.head.ref}`);
-                const isPRComment = pushPayload.comment.html_url.includes('pull');
-                const isReleaseBranch = Boolean(pull.head.ref.startsWith(constants_1.BRANCH_RELEASE_PREFIX) ||
-                    pull.head.ref.startsWith(constants_1.BRANCH_HOTFIX_PREFIX));
-                const command = (0, command_1.buildCommand)(pushPayload.comment.body, {
+                const command = (0, command_1.buildCommand)(payload.comment.body, {
                     gh_token,
                     circleci_token,
                     octokit,
-                    isPRComment,
-                    isReleaseBranch
+                    branch: pull.head.ref,
+                    isPRComment: payload.comment.html_url.includes('pull')
                 });
                 yield (command === null || command === void 0 ? void 0 : command.run());
             }
@@ -246,6 +245,140 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 918:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildReleaseJiraTicket = exports.buildReleaseJiraVersion = exports.extractVersion = exports.isReleaseBranch = void 0;
+const constants_1 = __nccwpck_require__(5105);
+function isReleaseBranch(branch) {
+    return [constants_1.BRANCH_RELEASE_PREFIX, constants_1.BRANCH_HOTFIX_PREFIX].some(prefix => branch.startsWith(prefix));
+}
+exports.isReleaseBranch = isReleaseBranch;
+function extractVersion(branch) {
+    const versionRegex = getVersionRegex([
+        constants_1.BRANCH_RELEASE_PREFIX,
+        constants_1.BRANCH_HOTFIX_PREFIX
+    ]);
+    const match = branch.match(versionRegex);
+    if (match)
+        return match[2];
+    return '';
+}
+exports.extractVersion = extractVersion;
+function buildReleaseJiraVersion(platform, product, version, framework = '') {
+    // {platform}[_{framework}]?_{product}@{version}
+    // js_react_live_uikit@0.0.0, ios_chat@0.0.0
+    const name = platformWithFramework(platform, framework);
+    return `${name}_${product}@${version}`;
+}
+exports.buildReleaseJiraVersion = buildReleaseJiraVersion;
+function buildReleaseJiraTicket(platform, product, version, framework = '') {
+    // [{product}]{platform}[_{framework}]?@{version}
+    // [Live_uikit] js_react@0.0.0, [Chat] ios@0.0.0
+    const name = platformWithFramework(capitalize(platform), framework);
+    return `[${capitalize(product)}] ${name}@${version}`;
+}
+exports.buildReleaseJiraTicket = buildReleaseJiraTicket;
+function platformWithFramework(platform, framework) {
+    return platform + (framework ? `_${framework}` : '');
+}
+function capitalize(str) {
+    if (!str)
+        return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+function getVersionRegex(inputs) {
+    const joinedInputs = inputs.join('|');
+    return new RegExp(`(${joinedInputs})\\/v?(\\d+\\.\\d+\\.\\d+)`);
+}
+
+
+/***/ }),
+
+/***/ 998:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.workflow = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const node_fetch_1 = __importDefault(__nccwpck_require__(467));
+const constants_1 = __nccwpck_require__(5105);
+const utils_1 = __nccwpck_require__(918);
+const workflowRequest = (args, parameters) => __awaiter(void 0, void 0, void 0, function* () {
+    const response = yield (0, node_fetch_1.default)(`https://circleci.com/api/v2/project/gh/${constants_1.WORKFLOW_REPO}/pipeline`, {
+        method: 'POST',
+        headers: {
+            'Circle-Token': args.circleci_token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ parameters })
+    });
+    return response.json();
+});
+exports.workflow = {
+    createTicket(args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const parameters = buildCreateTicketParams(args);
+            const response = yield workflowRequest(args, parameters);
+            return {
+                workflowUrl: `https://app.circleci.com/pipelines/github/${constants_1.WORKFLOW_REPO}/${response.number}`
+            };
+        });
+    }
+};
+function buildCreateTicketParams(args) {
+    const basicParams = buildBasicRequestParams();
+    return Object.assign(Object.assign({}, basicParams), { run_workflow_create_ticket: true, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version: (0, utils_1.extractVersion)(args.branch), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework')), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, basicParams.platform, core.getInput('framework')) });
+}
+function buildBasicRequestParams() {
+    return {
+        script_version: constants_1.WORKFLOW_SCRIPT_VERSION,
+        platform: core.getInput('platform'),
+        product: core.getInput('product'),
+        repo_name: github.context.repo.repo
+    };
+}
 
 
 /***/ }),

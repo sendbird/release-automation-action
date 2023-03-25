@@ -8,13 +8,11 @@ export function buildCommand(
   args: CommandArguments
 ): Command | null {
   if (!text.startsWith(COMMAND_TRIGGER) || !args.isPRComment) {
-    core.info('Invalid command or not a PR comment')
+    core.info('BuildCommand: Invalid command or not a PR comment')
     return null
   }
 
   const [action, target] = text.replace(COMMAND_TRIGGER, '').trim().split(' ')
-
-  core.info(`Command: ${action} ${target}`)
 
   switch (action) {
     case 'create':
