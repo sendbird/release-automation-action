@@ -18,6 +18,9 @@ async function run(): Promise<void> {
           github.context.ref.startsWith(BRANCH_HOTFIX_PREFIX)
       )
 
+      core.info(`event name: ${github.context.eventName}`)
+      core.info(`comment: ${pushPayload.comment.body}`)
+
       // CIRCLECI_TOKEN: 1Password > sha.sdk_deployment > Circle API Token
       const circleci_token = core.getInput('circleci_token')
       const gh_token = core.getInput('gh_token')

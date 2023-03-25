@@ -199,6 +199,8 @@ function run() {
                 const isPRComment = pushPayload.comment.html_url.includes('pull');
                 const isReleaseBranch = Boolean(github.context.ref.startsWith(constants_1.BRANCH_RELEASE_PREFIX) ||
                     github.context.ref.startsWith(constants_1.BRANCH_HOTFIX_PREFIX));
+                core.info(`event name: ${github.context.eventName}`);
+                core.info(`comment: ${pushPayload.comment.body}`);
                 // CIRCLECI_TOKEN: 1Password > sha.sdk_deployment > Circle API Token
                 const circleci_token = core.getInput('circleci_token');
                 const gh_token = core.getInput('gh_token');
