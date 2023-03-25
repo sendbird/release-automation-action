@@ -1,4 +1,4 @@
-name: 'Airen Kang'
+name: 'release-automation-action'
 description: 'GitHub action for release automation'
 author: 'Airen Kang'
 inputs:
