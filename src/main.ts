@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import * as exec from '@actions/exec'
 import type {
   IssueCommentCreatedEvent,
   WebhookEventName
@@ -36,6 +37,18 @@ async function run(): Promise<void> {
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
+}
+
+async function execInputCommands(name: string): Promise<void> {
+  const tasks = core
+    .getInput(name)
+    .split('\n')
+    .map(command => () => exec.exec(command))
+
+  await tasks.reduce(async (promise, task) => {
+    await promise
+    return task()
+  }, Promise.resolve(0))
 }
 
 run()
