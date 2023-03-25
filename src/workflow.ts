@@ -41,10 +41,13 @@ const workflowRequest = async (
 }
 
 export const workflow = {
+  log(message: string) {
+    core.info(`Workflow: ${message}`)
+  },
   async createTicket(args: CommandArguments): Promise<{workflowUrl: string}> {
     const parameters = buildCreateTicketParams(args)
     const response = await workflowRequest(args, parameters)
-
+    this.log(`response: ${JSON.stringify(response, null, 2)}`)
     return {
       workflowUrl: `https://app.circleci.com/pipelines/github/${WORKFLOW_REPO}/${response.number}`
     }

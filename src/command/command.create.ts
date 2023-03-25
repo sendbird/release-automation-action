@@ -1,4 +1,3 @@
-import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {CommandAbstract} from './command'
 import {isReleaseBranch} from '../utils'
@@ -17,7 +16,7 @@ export default class CreateCommand extends CommandAbstract {
   async createTicket(): Promise<void> {
     const owner_repo = `${github.context.repo.owner}/${github.context.repo.repo}`
 
-    // Add a comment about preparing ticket creation
+    this.log('Add a comment about preparing ticket creation')
     await this.args.octokit.rest.issues.createComment({
       ...github.context.repo,
       issue_number: github.context.issue.number,
@@ -26,15 +25,15 @@ export default class CreateCommand extends CommandAbstract {
 
     // Get pr head branch
     if (!isReleaseBranch(this.args.branch)) {
-      return core.info("it's not releasable 🙅")
+      return this.log("it's not releasable 🙅")
     } else {
-      core.info("it's releasable 🚀")
+      this.log("it's releasable 🚀")
     }
 
-    // Trigger ticket creation
+    this.log('Workflow request to create a ticket')
     const {workflowUrl} = await workflow.createTicket(this.args)
 
-    // Add a comment about processing ticket creation
+    this.log('Add a comment about processing ticket creation')
     await this.args.octokit.rest.issues.createComment({
       ...github.context.repo,
       issue_number: github.context.issue.number,

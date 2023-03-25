@@ -35,7 +35,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const command_1 = __nccwpck_require__(1521);
 const utils_1 = __nccwpck_require__(918);
@@ -54,18 +53,18 @@ class CreateCommand extends command_1.CommandAbstract {
     createTicket() {
         return __awaiter(this, void 0, void 0, function* () {
             const owner_repo = `${github.context.repo.owner}/${github.context.repo.repo}`;
-            // Add a comment about preparing ticket creation
+            this.log('Add a comment about preparing ticket creation');
             yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${owner_repo}/actions/runs/${github.context.runId}` }));
             // Get pr head branch
             if (!(0, utils_1.isReleaseBranch)(this.args.branch)) {
-                return core.info("it's not releasable 🙅");
+                return this.log("it's not releasable 🙅");
             }
             else {
-                core.info("it's releasable 🚀");
+                this.log("it's releasable 🚀");
             }
-            // Trigger ticket creation
+            this.log('Workflow request to create a ticket');
             const { workflowUrl } = yield workflow_1.workflow.createTicket(this.args);
-            // Add a comment about processing ticket creation
+            this.log('Add a comment about processing ticket creation');
             yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] In progress ${workflowUrl}` }));
         });
     }
@@ -106,7 +105,10 @@ class CommandAbstract {
     constructor(target, args) {
         this.target = target;
         this.args = args;
-        core.info(`${this.constructor.name}: ${target}`);
+        this.log(`target: ${target}`);
+    }
+    log(message) {
+        core.info(`${this.constructor.name}: ${message}`);
     }
 }
 exports.CommandAbstract = CommandAbstract;
@@ -357,10 +359,14 @@ const workflowRequest = (args, parameters) => __awaiter(void 0, void 0, void 0, 
     return response.json();
 });
 exports.workflow = {
+    log(message) {
+        core.info(`Workflow: ${message}`);
+    },
     createTicket(args) {
         return __awaiter(this, void 0, void 0, function* () {
             const parameters = buildCreateTicketParams(args);
             const response = yield workflowRequest(args, parameters);
+            this.log(`response: ${JSON.stringify(response, null, 2)}`);
             return {
                 workflowUrl: `https://app.circleci.com/pipelines/github/${constants_1.WORKFLOW_REPO}/${response.number}`
             };

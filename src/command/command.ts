@@ -19,7 +19,11 @@ export abstract class CommandAbstract implements Command {
     protected readonly target: string,
     protected readonly args: CommandArguments
   ) {
-    core.info(`${this.constructor.name}: ${target}`)
+    this.log(`target: ${target}`)
+  }
+
+  protected log(message: string): void {
+    core.info(`${this.constructor.name}: ${message}`)
   }
 
   abstract run(): Promise<void>
