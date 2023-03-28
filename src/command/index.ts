@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import type {Command, CommandArguments} from './command'
-import {COMMAND_TRIGGER} from '../constants'
+import {COMMAND_ACTIONS, COMMAND_TRIGGER} from '../constants'
 import CreateCommand from './command.create'
 
 export function buildCommand(
@@ -8,16 +8,14 @@ export function buildCommand(
   args: CommandArguments
 ): Command | null {
   if (!text.startsWith(COMMAND_TRIGGER) || !args.isPRComment) {
-    core.info('Invalid command or not a PR comment')
+    core.info('BuildCommand: Invalid command or not a PR comment')
     return null
   }
 
   const [action, target] = text.replace(COMMAND_TRIGGER, '').trim().split(' ')
 
-  core.info(`Command: ${action} ${target}`)
-
   switch (action) {
-    case 'create':
+    case COMMAND_ACTIONS.CREATE:
       return new CreateCommand(target, args)
     default:
       return null

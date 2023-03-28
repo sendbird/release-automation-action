@@ -1,4 +1,4 @@
-name: 'Airen Kang'
+name: 'release-automation-action'
 description: 'GitHub action for release automation'
 author: 'Airen Kang'
 inputs:
@@ -8,6 +8,21 @@ inputs:
   circleci_token:
     required: true
     description: 'Input CircleCI API token here'
+  platform:
+    required: true
+    description: 'Input SDK platform here, e.g. ios, android, js, rn, flutter'
+  product:
+    required: true
+    description: 'Input SDK product here, e.g. chat, calls, uikit, live, live_uikit'
+  framework:
+    required: false
+    description: 'Input SDK framework here, e.g. react'
+  product_jira_project_key:
+    required: true
+    description: 'Input product jira project key here, e.g. CORE, UIKIT, CALLS, PLATFORMX'
+  product_jira_version_prefix:
+    required: true
+    description: 'Input product jira release version prefix here, e.g. ios_core, rn_uikit, js_uikit'
 runs:
   using: 'node16'
   main: 'dist/index.js'
