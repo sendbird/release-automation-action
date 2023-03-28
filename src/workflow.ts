@@ -11,7 +11,10 @@ import {
 } from './utils'
 
 type WorkflowResponse = {
-  [key: string]: unknown
+  response: {
+    [key: string]: unknown
+  }
+  repository: string
 }
 
 type BasicRequestParams = {
@@ -23,10 +26,11 @@ type BasicRequestParams = {
 
 const workflowRequest = async (
   args: CommandArguments,
-  parameters: object
+  parameters: object,
+  repository = WORKFLOW_REPO
 ): Promise<WorkflowResponse> => {
   const response = await fetch(
-    `https://circleci.com/api/v2/project/gh/${WORKFLOW_REPO}/pipeline`,
+    `https://circleci.com/api/v2/project/gh/${repository}/pipeline`,
     {
       method: 'POST',
       headers: {
@@ -37,7 +41,10 @@ const workflowRequest = async (
     }
   )
 
-  return response.json()
+  return {
+    response: await response.json(),
+    repository
+  }
 }
 
 export const workflow = {
@@ -46,10 +53,10 @@ export const workflow = {
   },
   async createTicket(args: CommandArguments): Promise<{workflowUrl: string}> {
     const parameters = buildCreateTicketParams(args)
-    const response = await workflowRequest(args, parameters)
+    const {repository, response} = await workflowRequest(args, parameters)
     this.log(`response: ${JSON.stringify(response, null, 2)}`)
     return {
-      workflowUrl: `https://app.circleci.com/pipelines/github/${WORKFLOW_REPO}/${response.number}`
+      workflowUrl: `https://app.circleci.com/pipelines/github/${repository}/${response.number}`
     }
   }
 }

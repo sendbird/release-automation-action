@@ -377,8 +377,8 @@ const github = __importStar(__nccwpck_require__(5438));
 const node_fetch_1 = __importDefault(__nccwpck_require__(467));
 const constants_1 = __nccwpck_require__(5105);
 const utils_1 = __nccwpck_require__(918);
-const workflowRequest = (args, parameters) => __awaiter(void 0, void 0, void 0, function* () {
-    const response = yield (0, node_fetch_1.default)(`https://circleci.com/api/v2/project/gh/${constants_1.WORKFLOW_REPO}/pipeline`, {
+const workflowRequest = (args, parameters, repository = constants_1.WORKFLOW_REPO) => __awaiter(void 0, void 0, void 0, function* () {
+    const response = yield (0, node_fetch_1.default)(`https://circleci.com/api/v2/project/gh/${repository}/pipeline`, {
         method: 'POST',
         headers: {
             'Circle-Token': args.circleci_token,
@@ -386,7 +386,10 @@ const workflowRequest = (args, parameters) => __awaiter(void 0, void 0, void 0, 
         },
         body: JSON.stringify({ parameters })
     });
-    return response.json();
+    return {
+        response: yield response.json(),
+        repository
+    };
 });
 exports.workflow = {
     log(message) {
@@ -395,10 +398,10 @@ exports.workflow = {
     createTicket(args) {
         return __awaiter(this, void 0, void 0, function* () {
             const parameters = buildCreateTicketParams(args);
-            const response = yield workflowRequest(args, parameters);
+            const { repository, response } = yield workflowRequest(args, parameters);
             this.log(`response: ${JSON.stringify(response, null, 2)}`);
             return {
-                workflowUrl: `https://app.circleci.com/pipelines/github/${constants_1.WORKFLOW_REPO}/${response.number}`
+                workflowUrl: `https://app.circleci.com/pipelines/github/${repository}/${response.number}`
             };
         });
     }
