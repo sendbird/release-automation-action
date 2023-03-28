@@ -38,16 +38,22 @@ export function buildReleaseJiraTicket(
   // [{product}]{platform}[_{framework}]?@{version}
   // [Live_uikit] js_react@0.0.0, [Chat] ios@0.0.0
 
-  const name = platformWithFramework(capitalize(platform), framework)
-  return `[${capitalize(product)}] ${name}@${version}`
+  const name = platformWithFramework(platform, framework)
+  return `[${capitalizeProduct(product)}] ${name}@${version}`
 }
 
 function platformWithFramework(platform: string, framework?: string): string {
   return platform + (framework ? `_${framework}` : '')
 }
 
-function capitalize(str?: string): string {
+function capitalizeProduct(str?: string): string {
   if (!str) return ''
+  if (str === 'uikit') return 'UIKit'
+  if (str === 'live_uikit') return 'Live_UIKit'
+  return capitalize(str)
+}
+
+function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
