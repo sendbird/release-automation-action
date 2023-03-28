@@ -307,16 +307,23 @@ exports.buildReleaseJiraVersion = buildReleaseJiraVersion;
 function buildReleaseJiraTicket(platform, product, version, framework = '') {
     // [{product}]{platform}[_{framework}]?@{version}
     // [Live_uikit] js_react@0.0.0, [Chat] ios@0.0.0
-    const name = platformWithFramework(capitalize(platform), framework);
-    return `[${capitalize(product)}] ${name}@${version}`;
+    const name = platformWithFramework(platform, framework);
+    return `[${capitalizeProduct(product)}] ${name}@${version}`;
 }
 exports.buildReleaseJiraTicket = buildReleaseJiraTicket;
 function platformWithFramework(platform, framework) {
     return platform + (framework ? `_${framework}` : '');
 }
-function capitalize(str) {
+function capitalizeProduct(str) {
     if (!str)
         return '';
+    if (str === 'uikit')
+        return 'UIKit';
+    if (str === 'live_uikit')
+        return 'Live_UIKit';
+    return capitalize(str);
+}
+function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 function getVersionRegex(inputs) {
