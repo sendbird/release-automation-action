@@ -55,6 +55,27 @@ export const workflow = {
     const parameters = buildCreateTicketParams(args)
     const {repository, response} = await workflowRequest(args, parameters)
     this.log(`response: ${JSON.stringify(response, null, 2)}`)
+
+    if (response.message === 'Project not found') {
+      this.log(
+        "It looks like sendbird org authorize on the bot's GitHub account has been broken." +
+          "\n1. Please SSO log in and re-authenticate using bot's GitHub account" +
+          '\n2. https://app.circleci.com/settings/user > Refresh permissions'
+      )
+      throw new Error(
+        "Bot's GitHub account seems not authorized to organization"
+      )
+    }
+
+    if (response.message === 'Permission denied') {
+      this.log(
+        "It looks like bot can't access to project" +
+          '\n1. Please add bot as a admin to the GitHub project and add User Key in CircleCI Settings > SSH Keys' +
+          '\n2. https://github.com/settings/keys > Configure SSO > Authorize'
+      )
+      throw new Error('Bot cannot access to project')
+    }
+
     return {
       workflowUrl: `https://app.circleci.com/pipelines/github/${repository}/${response.number}`
     }
