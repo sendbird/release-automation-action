@@ -272,8 +272,8 @@ function checkPermission(username, octokit) {
             return true;
         }
         try {
-            const response = yield octokit.rest.repos.checkCollaborator(Object.assign(Object.assign({}, github.context.repo), { username }));
-            return response.status === 204;
+            const { data } = yield octokit.rest.repos.getCollaboratorPermissionLevel(Object.assign(Object.assign({}, github.context.repo), { username }));
+            return ['admin', 'write'].some(it => data.permission === it);
         }
         catch (e) {
             return false;

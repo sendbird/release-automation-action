@@ -51,7 +51,7 @@ async function run(): Promise<void> {
 async function checkPermission(
   username: string,
   octokit: ReturnType<typeof github.getOctokit>
-) {
+): Promise<boolean> {
   if (
     username === github.context.repo.owner ||
     username === SENDBIRD_BOT_USERNAME
@@ -60,11 +60,11 @@ async function checkPermission(
   }
 
   try {
-    const response = await octokit.rest.repos.checkCollaborator({
+    const {data} = await octokit.rest.repos.getCollaboratorPermissionLevel({
       ...github.context.repo,
       username
     })
-    return response.status === 204
+    return ['admin', 'write'].some(it => data.permission === it)
   } catch (e) {
     return false
   }
