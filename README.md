@@ -33,7 +33,7 @@ jobs:
 
 Replace version with the version of the action you want to use.
 
-Make sure to set the required secrets `CIRCLECI_TOKEN` and `GITHUB_TOKEN` in the repository settings.
+Make sure to set the required secret CircleCI API token in the repository settings.
 
 ## Inputs
 
