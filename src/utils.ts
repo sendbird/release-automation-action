@@ -16,6 +16,16 @@ export function extractVersion(branch: string): string {
   return ''
 }
 
+export function replaceVersion(link: string, version: string): string {
+  const pattern = /(\d+\.\d+\.\d+)\D*/
+  const match = pattern.exec(link)
+
+  if (!match) return link
+
+  const target = match[1]
+  return link.replace(target, version)
+}
+
 export function buildReleaseJiraVersion(
   platform: string,
   product: string,

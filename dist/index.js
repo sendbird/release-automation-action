@@ -303,7 +303,7 @@ run();
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.buildReleaseJiraTicket = exports.buildReleaseJiraVersion = exports.extractVersion = exports.isReleaseBranch = void 0;
+exports.buildReleaseJiraTicket = exports.buildReleaseJiraVersion = exports.replaceVersion = exports.extractVersion = exports.isReleaseBranch = void 0;
 const constants_1 = __nccwpck_require__(5105);
 function isReleaseBranch(branch) {
     return [constants_1.BRANCH_RELEASE_PREFIX, constants_1.BRANCH_HOTFIX_PREFIX].some(prefix => branch.startsWith(prefix));
@@ -320,6 +320,15 @@ function extractVersion(branch) {
     return '';
 }
 exports.extractVersion = extractVersion;
+function replaceVersion(link, version) {
+    const pattern = /(\d+\.\d+\.\d+)\D*/;
+    const match = pattern.exec(link);
+    if (!match)
+        return link;
+    const target = match[1];
+    return link.replace(target, version);
+}
+exports.replaceVersion = replaceVersion;
 function buildReleaseJiraVersion(platform, product, version, framework = '') {
     // {platform}[_{framework}]?_{product}@{version}
     // js_react_live_uikit@0.0.0, ios_chat@0.0.0
@@ -420,11 +429,14 @@ exports.workflow = {
     },
     createTicket(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            const parameters = buildCreateTicketParams(args);
+            const parameters = yield buildCreateTicketParams(args);
+            if (parameters.test)
+                this.log('Run on test environment');
             const { repository, response } = yield workflowRequest(args, parameters);
             this.log(`response: ${JSON.stringify(response, null, 2)}`);
             if (response.message === 'Project not found') {
-                this.log("It looks like sendbird org authorize on the bot's GitHub account has been broken." +
+                this.log('Please check first, valid token has been provided to CI' +
+                    "\nIf not, it looks like sendbird org authorize on the bot's GitHub account has been broken." +
                     "\n1. Please SSO log in and re-authenticate using bot's GitHub account" +
                     '\n2. https://app.circleci.com/settings/user > Refresh permissions');
                 throw new Error("Bot's GitHub account seems not authorized to organization");
@@ -442,9 +454,12 @@ exports.workflow = {
     }
 };
 function buildCreateTicketParams(args) {
-    const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
-    const release_version = (0, utils_1.extractVersion)(args.branch);
-    return Object.assign(Object.assign({}, basicParams), { product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version, release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()) });
+    return __awaiter(this, void 0, void 0, function* () {
+        const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
+        const release_version = (0, utils_1.extractVersion)(args.branch);
+        const latestRelease = yield args.octokit.rest.repos.getLatestRelease(github.context.repo);
+        return Object.assign(Object.assign({}, basicParams), { test: core.getInput('test') !== '', product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestRelease.data.html_url, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()) });
+    });
 }
 function buildBasicRequestParams(workflowName) {
     return {

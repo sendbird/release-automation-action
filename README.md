@@ -48,6 +48,7 @@ The action requires the following inputs:
 | `framework`                   | (Optional) The framework for the product's SDK, such as `react`.                                          | No       |
 | `product_jira_project_key`    | The project key for the product's Jira project, such as `CORE`, `UIKIT`, `CALLS`, or `PLATFORMX`.         | Yes      |
 | `product_jira_version_prefix` | The release version prefix for the product's Jira project, such as `ios_core`, `rn_uikit`, or `js_uikit`. | Yes      |
+| `test`                        | Ticket creation and slack alerts are executed in the test environment (release board, slack channel).     | No       |
 
 ## Commands
 

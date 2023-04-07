@@ -7,7 +7,8 @@ import {WORKFLOW_REPO, WORKFLOW_SCRIPT_VERSION, WORKFLOWS} from './constants'
 import {
   buildReleaseJiraTicket,
   buildReleaseJiraVersion,
-  extractVersion
+  extractVersion,
+  replaceVersion
 } from './utils'
 
 type WorkflowResponse = {
@@ -52,13 +53,17 @@ export const workflow = {
     core.info(`Workflow: ${message}`)
   },
   async createTicket(args: CommandArguments): Promise<{workflowUrl: string}> {
-    const parameters = buildCreateTicketParams(args)
+    const parameters = await buildCreateTicketParams(args)
+
+    if (parameters.test) this.log('Run on test environment')
+
     const {repository, response} = await workflowRequest(args, parameters)
     this.log(`response: ${JSON.stringify(response, null, 2)}`)
 
     if (response.message === 'Project not found') {
       this.log(
-        "It looks like sendbird org authorize on the bot's GitHub account has been broken." +
+        'Please check first, valid token has been provided to CI' +
+          "\nIf not, it looks like sendbird org authorize on the bot's GitHub account has been broken." +
           "\n1. Please SSO log in and re-authenticate using bot's GitHub account" +
           '\n2. https://app.circleci.com/settings/user > Refresh permissions'
       )
@@ -81,15 +86,25 @@ export const workflow = {
     }
   }
 }
-function buildCreateTicketParams(args: CommandArguments): object {
+async function buildCreateTicketParams(args: CommandArguments) {
   const basicParams = buildBasicRequestParams(WORKFLOWS.CREATE_TICKET)
   const release_version = extractVersion(args.branch)
+
+  const latestRelease = await args.octokit.rest.repos.getLatestRelease(
+    github.context.repo
+  )
+
   return {
     ...basicParams,
+    test: core.getInput('test') !== '',
     product_jira_project_key: core.getInput('product_jira_project_key'),
     product_jira_version_prefix: core.getInput('product_jira_version_prefix'),
     release_branch: args.branch,
     release_version,
+    release_gh_link: replaceVersion(
+      latestRelease.data.html_url,
+      release_version
+    ),
     release_pr_number: github.context.issue.number,
     release_jira_version: buildReleaseJiraVersion(
       basicParams.platform,

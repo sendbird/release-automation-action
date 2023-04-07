@@ -23,6 +23,9 @@ inputs:
   product_jira_version_prefix:
     required: true
     description: 'Input product jira release version prefix here, e.g. ios_core, rn_uikit, js_uikit'
+  test:
+    required: false
+    description: 'Input actions run on testing environment'
 runs:
   using: 'node16'
   main: 'dist/index.js'

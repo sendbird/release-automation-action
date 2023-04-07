@@ -15,3 +15,4 @@ jobs:
           platform: 'rn'
           product_jira_project_key: 'UIKIT'
           product_jira_version_prefix: 'rn_uikit'
+          test: true
