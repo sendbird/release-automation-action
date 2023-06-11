@@ -20,7 +20,7 @@
     "format-check": "prettier --check '**/**.ts'",
     "lint": "eslint src/**/**.ts",
     "test": "jest",
-    "all": "yarn format && yarn lint && yarn test && yarn build"
+    "all": "yarn build && yarn format && yarn lint && yarn test"
   },
   "main": "lib/main.js",
   "dependencies": {
