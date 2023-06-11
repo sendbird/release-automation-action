@@ -1,0 +1,32 @@
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'version'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+      - run: yarn install --immutable
+      - name: 'set environments'
+        run: |
+          git config --global user.name "sendbird-sdk-deployment"
+          git config --global user.email "sha.sdk_deployment@sendbird.com"
+      - name: 'publish to github'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          yarn release-it ${{ github.event.inputs.version }} --ci
+      - name: Tag new target
+        run: git tag -f latest ${{ github.event.inputs.version }}
+      - name: Push new tag
+        run: git push origin latest --force
