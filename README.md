@@ -57,3 +57,8 @@ You can use the following commands in the PR comment:
 | command              | description                           |
 | -------------------- | ------------------------------------- |
 | `/bot create ticket` | Creates a new release ticket in Jira. |
+
+## Slack notifications
+
+It mentions the `@{{product}}-approver` Slack group to notify ticket creation in the channel.
+If it's a new product, you need to add a Slack group with the corresponding name so that the appropriate people can be mentioned.
