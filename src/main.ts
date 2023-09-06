@@ -25,6 +25,7 @@ async function run(): Promise<void> {
       })
 
       const comment = payload.comment.body.toLowerCase()
+
       const command = buildCommand(comment, {
         gh_token,
         circleci_token,

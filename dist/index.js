@@ -67,7 +67,7 @@ class CreateCommand extends command_1.CommandAbstract {
                 this.log("it's releasable 🚀");
             }
             this.log('Workflow request to create a ticket');
-            const { workflowUrl } = yield workflow_1.workflow.createTicket(this.args);
+            const { workflowUrl } = yield workflow_1.workflow.createTicket(this.args, this.params);
             this.log('Add a comment about processing ticket creation');
             yield this.args.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, body: `[Creating Ticket] In progress ${workflowUrl}` }));
         });
@@ -110,9 +110,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommandAbstract = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 class CommandAbstract {
-    constructor(target, args) {
+    constructor(target, args, params) {
         this.target = target;
         this.args = args;
+        this.params = params;
         this.log(`target: ${target}`);
     }
     log(message) {
@@ -165,10 +166,18 @@ function buildCommand(text, args) {
         core.info('BuildCommand: Invalid command or not a PR comment');
         return null;
     }
-    const [action, target] = text.replace(constants_1.COMMAND_TRIGGER, '').trim().split(' ');
+    const [action, target, ...paramCandidates] = text
+        .replace(constants_1.COMMAND_TRIGGER, '')
+        .trim()
+        .split(' ');
+    const params = paramCandidates
+        .filter(it => it.startsWith(constants_1.COMMAND_PARAM_PREFIX))
+        .map(it => it.replace(constants_1.COMMAND_PARAM_PREFIX, ''))
+        .map(it => it.split('='))
+        .reduce((acc, [key, value = true]) => (Object.assign(Object.assign({}, acc), { [key]: value })), constants_1.COMMAND_DEFAULT_PARAMS);
     switch (action) {
         case constants_1.COMMAND_ACTIONS.CREATE:
-            return new command_create_1.default(target, args);
+            return new command_create_1.default(target, args, params);
         default:
             return null;
     }
@@ -184,7 +193,7 @@ exports.buildCommand = buildCommand;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SENDBIRD_BOT_USERNAME = exports.WORKFLOWS = exports.WORKFLOW_SCRIPT_VERSION = exports.WORKFLOW_REPO = exports.BRANCH_HOTFIX_PREFIX = exports.BRANCH_RELEASE_PREFIX = exports.COMMAND_TARGETS = exports.COMMAND_ACTIONS = exports.COMMAND_TRIGGER = void 0;
+exports.COMMAND_DEFAULT_PARAMS = exports.SENDBIRD_BOT_USERNAME = exports.WORKFLOWS = exports.WORKFLOW_SCRIPT_VERSION = exports.WORKFLOW_REPO = exports.BRANCH_HOTFIX_PREFIX = exports.BRANCH_RELEASE_PREFIX = exports.COMMAND_PARAM_PREFIX = exports.COMMAND_TARGETS = exports.COMMAND_ACTIONS = exports.COMMAND_TRIGGER = void 0;
 exports.COMMAND_TRIGGER = '/bot';
 exports.COMMAND_ACTIONS = {
     CREATE: 'create'
@@ -192,6 +201,7 @@ exports.COMMAND_ACTIONS = {
 exports.COMMAND_TARGETS = {
     TICKET: 'ticket'
 };
+exports.COMMAND_PARAM_PREFIX = '--';
 exports.BRANCH_RELEASE_PREFIX = 'release';
 exports.BRANCH_HOTFIX_PREFIX = 'hotfix';
 exports.WORKFLOW_REPO = 'sendbird/sdk-deployment';
@@ -200,6 +210,9 @@ exports.WORKFLOWS = {
     CREATE_TICKET: 'run_workflow_create_ticket'
 };
 exports.SENDBIRD_BOT_USERNAME = 'sendbird-sdk-deployment';
+exports.COMMAND_DEFAULT_PARAMS = {
+    test: false
+};
 
 
 /***/ }),
@@ -447,12 +460,12 @@ exports.workflow = {
     log(message) {
         core.info(`Workflow: ${message}`);
     },
-    createTicket(args) {
+    createTicket(commandArgs, commandParams) {
         return __awaiter(this, void 0, void 0, function* () {
-            const parameters = yield buildCreateTicketParams(args);
-            if (parameters.test)
+            const ticketParams = yield buildCreateTicketParams(commandArgs, commandParams);
+            if (ticketParams.test)
                 this.log('Run on test environment');
-            const { repository, response } = yield workflowRequest(args, parameters);
+            const { repository, response } = yield workflowRequest(commandArgs, ticketParams);
             this.log(`response: ${JSON.stringify(response, null, 2)}`);
             if (response.message === 'Project not found') {
                 this.log('Please check first, valid token has been provided to CI' +
@@ -473,12 +486,12 @@ exports.workflow = {
         });
     }
 };
-function buildCreateTicketParams(args) {
+function buildCreateTicketParams(args, params) {
     return __awaiter(this, void 0, void 0, function* () {
         const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
         const release_version = (0, utils_1.extractVersion)(args.branch);
         const latestRelease = yield args.octokit.rest.repos.getLatestRelease(github.context.repo);
-        return Object.assign(Object.assign({}, basicParams), { test: core.getInput('test') !== '', product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestRelease.data.html_url, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()) });
+        return Object.assign(Object.assign({}, basicParams), { test: core.getBooleanInput('test') || params.test, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestRelease.data.html_url, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()) });
     });
 }
 function buildBasicRequestParams(workflowName) {

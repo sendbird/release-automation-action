@@ -31,7 +31,7 @@ export default class CreateCommand extends CommandAbstract {
     }
 
     this.log('Workflow request to create a ticket')
-    const {workflowUrl} = await workflow.createTicket(this.args)
+    const {workflowUrl} = await workflow.createTicket(this.args, this.params)
 
     this.log('Add a comment about processing ticket creation')
     await this.args.octokit.rest.issues.createComment({

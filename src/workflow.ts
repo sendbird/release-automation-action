@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import fetch from 'node-fetch'
 
-import type {CommandArguments} from './command/command'
+import type {CommandArguments, CommandParameters} from './command/command'
 import {WORKFLOW_REPO, WORKFLOW_SCRIPT_VERSION, WORKFLOWS} from './constants'
 import {
   buildReleaseJiraTicket,
@@ -52,12 +52,21 @@ export const workflow = {
   log(message: string) {
     core.info(`Workflow: ${message}`)
   },
-  async createTicket(args: CommandArguments): Promise<{workflowUrl: string}> {
-    const parameters = await buildCreateTicketParams(args)
+  async createTicket(
+    commandArgs: CommandArguments,
+    commandParams: CommandParameters
+  ): Promise<{workflowUrl: string}> {
+    const ticketParams = await buildCreateTicketParams(
+      commandArgs,
+      commandParams
+    )
 
-    if (parameters.test) this.log('Run on test environment')
+    if (ticketParams.test) this.log('Run on test environment')
 
-    const {repository, response} = await workflowRequest(args, parameters)
+    const {repository, response} = await workflowRequest(
+      commandArgs,
+      ticketParams
+    )
     this.log(`response: ${JSON.stringify(response, null, 2)}`)
 
     if (response.message === 'Project not found') {
@@ -86,7 +95,10 @@ export const workflow = {
     }
   }
 }
-async function buildCreateTicketParams(args: CommandArguments) {
+async function buildCreateTicketParams(
+  args: CommandArguments,
+  params: CommandParameters
+) {
   const basicParams = buildBasicRequestParams(WORKFLOWS.CREATE_TICKET)
   const release_version = extractVersion(args.branch)
 
@@ -96,7 +108,7 @@ async function buildCreateTicketParams(args: CommandArguments) {
 
   return {
     ...basicParams,
-    test: core.getInput('test') !== '',
+    test: core.getBooleanInput('test') || params.test,
     product_jira_project_key: core.getInput('product_jira_project_key'),
     product_jira_version_prefix: core.getInput('product_jira_version_prefix'),
     release_branch: args.branch,
