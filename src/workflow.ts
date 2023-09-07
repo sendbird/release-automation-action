@@ -61,7 +61,9 @@ export const workflow = {
       commandParams
     )
 
-    if (ticketParams.test) this.log('Run on test environment')
+    if ('test' in ticketParams && ticketParams.test) {
+      this.log('Run on test environment')
+    }
 
     const {repository, response} = await workflowRequest(
       commandArgs,
@@ -98,13 +100,19 @@ export const workflow = {
 async function buildCreateTicketParams(
   args: CommandArguments,
   params: CommandParameters
-) {
+): Promise<object> {
   const basicParams = buildBasicRequestParams(WORKFLOWS.CREATE_TICKET)
   const release_version = extractVersion(args.branch)
 
-  const latestRelease = await args.octokit.rest.repos.getLatestRelease(
-    github.context.repo
-  )
+  let latestReleaseLink = ''
+  try {
+    const latestRelease = await args.octokit.rest.repos.getLatestRelease(
+      github.context.repo
+    )
+    latestReleaseLink = latestRelease.data.html_url
+  } catch (e) {
+    latestReleaseLink = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases/tag/0.0.0`
+  }
 
   return {
     ...basicParams,
@@ -113,10 +121,7 @@ async function buildCreateTicketParams(
     product_jira_version_prefix: core.getInput('product_jira_version_prefix'),
     release_branch: args.branch,
     release_version,
-    release_gh_link: replaceVersion(
-      latestRelease.data.html_url,
-      release_version
-    ),
+    release_gh_link: replaceVersion(latestReleaseLink, release_version),
     release_pr_number: github.context.issue.number,
     release_jira_version: buildReleaseJiraVersion(
       basicParams.platform,
