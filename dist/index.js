@@ -463,8 +463,9 @@ exports.workflow = {
     createTicket(commandArgs, commandParams) {
         return __awaiter(this, void 0, void 0, function* () {
             const ticketParams = yield buildCreateTicketParams(commandArgs, commandParams);
-            if (ticketParams.test)
+            if ('test' in ticketParams && ticketParams.test) {
                 this.log('Run on test environment');
+            }
             const { repository, response } = yield workflowRequest(commandArgs, ticketParams);
             this.log(`response: ${JSON.stringify(response, null, 2)}`);
             if (response.message === 'Project not found') {
@@ -490,8 +491,15 @@ function buildCreateTicketParams(args, params) {
     return __awaiter(this, void 0, void 0, function* () {
         const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
         const release_version = (0, utils_1.extractVersion)(args.branch);
-        const latestRelease = yield args.octokit.rest.repos.getLatestRelease(github.context.repo);
-        return Object.assign(Object.assign({}, basicParams), { test: core.getBooleanInput('test') || params.test, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestRelease.data.html_url, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()) });
+        let latestReleaseLink = '';
+        try {
+            const latestRelease = yield args.octokit.rest.repos.getLatestRelease(github.context.repo);
+            latestReleaseLink = latestRelease.data.html_url;
+        }
+        catch (e) {
+            latestReleaseLink = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases/tag/0.0.0`;
+        }
+        return Object.assign(Object.assign({}, basicParams), { test: core.getBooleanInput('test') || params.test, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestReleaseLink, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()) });
     });
 }
 function buildBasicRequestParams(workflowName) {
