@@ -14,10 +14,16 @@ export type CommandArguments = {
   [key: string]: unknown
 }
 
+export type CommandParameters = {
+  test: boolean
+  [key: string]: unknown
+}
+
 export abstract class CommandAbstract implements Command {
   constructor(
     protected readonly target: string,
-    protected readonly args: CommandArguments
+    protected readonly args: CommandArguments,
+    protected readonly params: CommandParameters
   ) {
     this.log(`target: ${target}`)
   }

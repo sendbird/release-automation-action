@@ -1,3 +1,5 @@
+import {CommandParameters} from './command/command'
+
 export const COMMAND_TRIGGER = '/bot'
 export const COMMAND_ACTIONS = {
   CREATE: 'create'
@@ -5,6 +7,7 @@ export const COMMAND_ACTIONS = {
 export const COMMAND_TARGETS = {
   TICKET: 'ticket'
 }
+export const COMMAND_PARAM_PREFIX = '--'
 
 export const BRANCH_RELEASE_PREFIX = 'release'
 export const BRANCH_HOTFIX_PREFIX = 'hotfix'
@@ -16,3 +19,6 @@ export const WORKFLOWS = {
 }
 
 export const SENDBIRD_BOT_USERNAME = 'sendbird-sdk-deployment'
+export const COMMAND_DEFAULT_PARAMS: CommandParameters = {
+  test: false
+}
