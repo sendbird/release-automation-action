@@ -26,6 +26,7 @@ inputs:
   test:
     required: false
     description: 'Input actions run on testing environment'
+    default: 'false'
 runs:
   using: 'node16'
   main: 'dist/index.js'
