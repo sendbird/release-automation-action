@@ -26,17 +26,27 @@ export function replaceVersion(link: string, version: string): string {
   return link.replace(target, version)
 }
 
+export function buildProductJiraVersion(
+  platform: string,
+  product: string
+): string {
+  // {product}-{platform}[-{framework}]?
+  // chat-ios, chat-android, live-uikit-js-react, uikit-js-react
+
+  return `${product}-${platform}`
+}
+
 export function buildReleaseJiraVersion(
   platform: string,
   product: string,
   version: string,
   framework = ''
 ): string {
-  // {platform}[_{framework}]?_{product}@{version}
-  // js_react_live_uikit@0.0.0, ios_chat@0.0.0
+  // {product}-{platform}[-{framework}]?@{version}
+  // live-uikit-js-react@0.0.0, chat-ios@0.0.0
 
-  const name = platformWithFramework(platform, framework)
-  return `${name}_${product}@${version}`
+  const platformAndFramework = platformWithFramework(platform, framework)
+  return `${product}-${platformAndFramework}@${version}`
 }
 
 export function buildReleaseJiraTicket(
@@ -45,21 +55,21 @@ export function buildReleaseJiraTicket(
   version: string,
   framework = ''
 ): string {
-  // [{product}]{platform}[_{framework}]?@{version}
-  // [Live_uikit] js_react@0.0.0, [Chat] ios@0.0.0
+  // [{product}]{platform}[-{framework}]?@{version}
+  // [Live-UIKit] js-react@0.0.0, [Chat] ios@0.0.0
 
-  const name = platformWithFramework(platform, framework)
-  return `[${capitalizeProduct(product)}] ${name}@${version}`
+  const platformAndFramework = platformWithFramework(platform, framework)
+  return `[${capitalizeProduct(product)}] ${platformAndFramework}@${version}`
 }
 
 function platformWithFramework(platform: string, framework?: string): string {
-  return platform + (framework ? `_${framework}` : '')
+  return platform + (framework ? `-${framework}` : '')
 }
 
 function capitalizeProduct(str?: string): string {
   if (!str) return ''
   if (str === 'uikit') return 'UIKit'
-  if (str === 'live_uikit') return 'Live_UIKit'
+  if (str === 'live_uikit' || str === 'live-uikit') return 'Live-UIKit'
   return capitalize(str)
 }
 

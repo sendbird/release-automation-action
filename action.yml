@@ -14,15 +14,15 @@ inputs:
   product:
     required: true
     description: 'Input SDK product here, e.g. chat, calls, uikit, live, live_uikit'
-  framework:
-    required: false
-    description: 'Input SDK framework here, e.g. react'
   product_jira_project_key:
     required: true
     description: 'Input product jira project key here, e.g. CORE, UIKIT, CALLS, PLATFORMX'
   product_jira_version_prefix:
-    required: true
-    description: 'Input product jira release version prefix here, e.g. ios_core, rn_uikit, js_uikit'
+    required: false
+    description: 'Input custom product jira release version prefix here, e.g. ios_core, rn_uikit, js_uikit. (default: {product}-{platform}[-{framework}]?)'
+  framework:
+    required: false
+    description: 'Input SDK framework here, e.g. react'
   test:
     required: false
     description: 'Input actions run on testing environment'
