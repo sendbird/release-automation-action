@@ -332,7 +332,7 @@ run();
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.buildReleaseJiraTicket = exports.buildReleaseJiraVersion = exports.replaceVersion = exports.extractVersion = exports.isReleaseBranch = void 0;
+exports.buildReleaseJiraTicket = exports.buildReleaseJiraVersion = exports.buildProductJiraVersion = exports.replaceVersion = exports.extractVersion = exports.isReleaseBranch = void 0;
 const constants_1 = __nccwpck_require__(5105);
 function isReleaseBranch(branch) {
     return [constants_1.BRANCH_RELEASE_PREFIX, constants_1.BRANCH_HOTFIX_PREFIX].some(prefix => branch.startsWith(prefix));
@@ -358,30 +358,36 @@ function replaceVersion(link, version) {
     return link.replace(target, version);
 }
 exports.replaceVersion = replaceVersion;
+function buildProductJiraVersion(platform, product) {
+    // {product}-{platform}[-{framework}]?
+    // chat-ios, chat-android, live-uikit-js-react, uikit-js-react
+    return `${product}-${platform}`;
+}
+exports.buildProductJiraVersion = buildProductJiraVersion;
 function buildReleaseJiraVersion(platform, product, version, framework = '') {
-    // {platform}[_{framework}]?_{product}@{version}
-    // js_react_live_uikit@0.0.0, ios_chat@0.0.0
-    const name = platformWithFramework(platform, framework);
-    return `${name}_${product}@${version}`;
+    // {product}-{platform}[-{framework}]?@{version}
+    // live-uikit-js-react@0.0.0, chat-ios@0.0.0
+    const platformAndFramework = platformWithFramework(platform, framework);
+    return `${product}-${platformAndFramework}@${version}`;
 }
 exports.buildReleaseJiraVersion = buildReleaseJiraVersion;
 function buildReleaseJiraTicket(platform, product, version, framework = '') {
-    // [{product}]{platform}[_{framework}]?@{version}
-    // [Live_uikit] js_react@0.0.0, [Chat] ios@0.0.0
-    const name = platformWithFramework(platform, framework);
-    return `[${capitalizeProduct(product)}] ${name}@${version}`;
+    // [{product}]{platform}[-{framework}]?@{version}
+    // [Live-UIKit] js-react@0.0.0, [Chat] ios@0.0.0
+    const platformAndFramework = platformWithFramework(platform, framework);
+    return `[${capitalizeProduct(product)}] ${platformAndFramework}@${version}`;
 }
 exports.buildReleaseJiraTicket = buildReleaseJiraTicket;
 function platformWithFramework(platform, framework) {
-    return platform + (framework ? `_${framework}` : '');
+    return platform + (framework ? `-${framework}` : '');
 }
 function capitalizeProduct(str) {
     if (!str)
         return '';
     if (str === 'uikit')
         return 'UIKit';
-    if (str === 'live_uikit')
-        return 'Live_UIKit';
+    if (str === 'live_uikit' || str === 'live-uikit')
+        return 'Live-UIKit';
     return capitalize(str);
 }
 function capitalize(str) {
@@ -499,7 +505,8 @@ function buildCreateTicketParams(args, params) {
         catch (e) {
             latestReleaseLink = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases/tag/0.0.0`;
         }
-        return Object.assign(Object.assign({}, basicParams), { test: core.getBooleanInput('test') || params.test, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix'), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestReleaseLink, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()) });
+        return Object.assign(Object.assign({}, basicParams), { test: core.getBooleanInput('test') || params.test, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix') ||
+                (0, utils_1.buildProductJiraVersion)(basicParams.platform, basicParams.product), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestReleaseLink, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()) });
     });
 }
 function buildBasicRequestParams(workflowName) {
