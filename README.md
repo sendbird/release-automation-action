@@ -39,16 +39,16 @@ Make sure to set the required secret CircleCI API token in the repository settin
 
 The action requires the following inputs:
 
-| name                          | description                                                                                               | required |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------- | -------- |
-| `gh_token`                    | The GitHub access token used to authenticate with the Octokit instance.                                   | Yes      |
-| `circleci_token`              | The CircleCI API token used to trigger the build and deploy workflow.                                     | Yes      |
-| `product`                     | The name of the product's SDK, such as `chat`, `calls`, `uikit`, `live`, or `live_uikit`.                 | Yes      |
-| `platform`                    | The platform for the product's SDK, such as `ios`, `android`, `js`, `rn`, or `flutter`.                   | Yes      |
-| `framework`                   | (Optional) The framework for the product's SDK, such as `react`.                                          | No       |
-| `product_jira_project_key`    | The project key for the product's Jira project, such as `CORE`, `UIKIT`, `CALLS`, or `PLATFORMX`.         | Yes      |
-| `product_jira_version_prefix` | The release version prefix for the product's Jira project, such as `ios_core`, `rn_uikit`, or `js_uikit`. | Yes      |
-| `test`                        | Ticket creation and slack alerts are executed in the test environment (release board, slack channel).     | No       |
+| name                          | description                                                                                                                                                                | required |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `gh_token`                    | The GitHub access token used to authenticate with the Octokit instance.                                                                                                    | Yes      |
+| `circleci_token`              | The CircleCI API token used to trigger the build and deploy workflow.                                                                                                      | Yes      |
+| `product`                     | The name of the product's SDK, such as `chat`, `calls`, `uikit`, `live`, or `live_uikit`.                                                                                  | Yes      |
+| `platform`                    | The platform for the product's SDK, such as `ios`, `android`, `js`, `rn`, or `flutter`.                                                                                    | Yes      |
+| `product_jira_project_key`    | The project key for the product's Jira project, such as `CORE`, `UIKIT`, `CALLS`, or `PLATFORMX`.                                                                          | Yes      |
+| `product_jira_version_prefix` | (Optional) The custom release version prefix for the product's Jira project, such as `ios_core`, `rn_uikit`, or `js_uikit`. (default: {product}-{platform}[-{framework}]?) | No       |
+| `framework`                   | (Optional) The framework for the product's SDK, such as `react`.                                                                                                           | No       |
+| `test`                        | (Optional) Ticket creation and slack alerts are executed in the test environment (release board, slack channel). (default: false)                                          | No       |
 
 ## Commands
 
