@@ -4,7 +4,7 @@
   },
   "hooks": {
     "before:bump": "yarn all",
-    "after:bump": "npx auto-changelog -p"
+    "after:bump": "npx auto-changelog -p && git add ."
   },
   "github": {
     "release": true
