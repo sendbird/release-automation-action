@@ -345,7 +345,7 @@ function extractVersion(branch) {
     ]);
     const match = branch.match(versionRegex);
     if (match)
-        return match[2];
+        return match[match.length - 1];
     return '';
 }
 exports.extractVersion = extractVersion;
@@ -395,7 +395,9 @@ function capitalize(str) {
 }
 function getVersionRegex(inputs) {
     const joinedInputs = inputs.join('|');
-    return new RegExp(`(${joinedInputs})\\/v?(\\d+\\.\\d+\\.\\d+)`);
+    // release/0.0.0
+    // release/ktx/0.0.0
+    return new RegExp(`(${joinedInputs})\\/\\w*\\/*v?(\\d+\\.\\d+\\.\\d+)`);
 }
 
 

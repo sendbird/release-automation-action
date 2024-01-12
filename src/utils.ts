@@ -12,7 +12,7 @@ export function extractVersion(branch: string): string {
     BRANCH_HOTFIX_PREFIX
   ])
   const match = branch.match(versionRegex)
-  if (match) return match[2]
+  if (match) return match[match.length - 1]
   return ''
 }
 
@@ -79,5 +79,7 @@ function capitalize(str: string): string {
 
 function getVersionRegex(inputs: string[]): RegExp {
   const joinedInputs = inputs.join('|')
-  return new RegExp(`(${joinedInputs})\\/v?(\\d+\\.\\d+\\.\\d+)`)
+  // release/0.0.0
+  // release/ktx/0.0.0
+  return new RegExp(`(${joinedInputs})\\/\\w*\\/*v?(\\d+\\.\\d+\\.\\d+)`)
 }
