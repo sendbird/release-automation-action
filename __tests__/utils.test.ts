@@ -10,6 +10,10 @@ describe('extractVersion', () => {
     expect(extractVersion('release/1.2.3')).toBe('1.2.3')
     expect(extractVersion('release/v1.2.3')).toBe('1.2.3')
     expect(extractVersion('release/ktx/v1.2.3')).toBe('1.2.3')
+
+    expect(extractVersion('release/test/1.2.3')).toBe('1.2.3')
+    expect(extractVersion('release/test/v1.2.3')).toBe('1.2.3')
+    expect(extractVersion('release/ktx/test/v1.2.3')).toBe('1.2.3')
   })
 
   test('Should return an empty string if the branch convention is invalid', () => {
