@@ -40,7 +40,7 @@ Make sure to set the required secret CircleCI API token in the repository settin
 The action requires the following inputs:
 
 | name                          | description                                                                                                                                                                | required |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+|-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |
 | `gh_token`                    | The GitHub access token used to authenticate with the Octokit instance.                                                                                                    | Yes      |
 | `circleci_token`              | The CircleCI API token used to trigger the build and deploy workflow.                                                                                                      | Yes      |
 | `product`                     | The name of the product's SDK, such as `chat`, `calls`, `uikit`, `live`, or `live_uikit`.                                                                                  | Yes      |
@@ -49,6 +49,7 @@ The action requires the following inputs:
 | `product_jira_version_prefix` | (Optional) The custom release version prefix for the product's Jira project, such as `ios_core`, `rn_uikit`, or `js_uikit`. (default: {product}-{platform}[-{framework}]?) | No       |
 | `framework`                   | (Optional) The framework for the product's SDK, such as `react`.                                                                                                           | No       |
 | `test`                        | (Optional) Ticket creation and slack alerts are executed in the test environment (release board, slack channel). (default: false)                                          | No       |
+| `changelog_file`              | (Optional) Changelog file name (e.g. CHANGELOG_KTX_DRAFT.md). (default: CHANGELOG_DRAFT.md)                                                                                | No       |
 
 ## Commands
 

@@ -137,7 +137,8 @@ async function buildCreateTicketParams(
       basicParams.product,
       release_version,
       core.getInput('framework').toLowerCase()
-    )
+    ),
+    changelog_file: core.getInput('changelog_file') || 'CHANGELOG_DRAFT.md'
   }
 }
 
