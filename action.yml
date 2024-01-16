@@ -26,11 +26,9 @@ inputs:
   test:
     required: false
     description: 'Input actions run on testing environment'
-    default: 'false'
   changelog_file:
     required: false
     description: 'Input changelog file name. (e.g. CHANGELOG_KTX_DRAFT.md) Default is CHANGELOG_DRAFT.md.'
-    default: 'CHANGELOG_DRAFT.md'
 runs:
   using: 'node16'
   main: 'dist/index.js'
