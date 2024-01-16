@@ -117,7 +117,7 @@ async function buildCreateTicketParams(
 
   return {
     ...basicParams,
-    test: core.getBooleanInput('test') ?? params.test ?? false,
+    test: core.getBooleanInput('test') || params.test,
     product_jira_project_key: core.getInput('product_jira_project_key'),
     product_jira_version_prefix:
       core.getInput('product_jira_version_prefix') ||

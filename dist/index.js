@@ -496,7 +496,6 @@ exports.workflow = {
     }
 };
 function buildCreateTicketParams(args, params) {
-    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
         const release_version = (0, utils_1.extractVersion)(args.branch);
@@ -508,7 +507,7 @@ function buildCreateTicketParams(args, params) {
         catch (e) {
             latestReleaseLink = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases/tag/0.0.0`;
         }
-        return Object.assign(Object.assign({}, basicParams), { test: (_b = (_a = core.getBooleanInput('test')) !== null && _a !== void 0 ? _a : params.test) !== null && _b !== void 0 ? _b : false, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix') ||
+        return Object.assign(Object.assign({}, basicParams), { test: core.getBooleanInput('test') || params.test, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix') ||
                 (0, utils_1.buildProductJiraVersion)(basicParams.platform, basicParams.product), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestReleaseLink, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), changelog_file: core.getInput('changelog_file') || 'CHANGELOG_DRAFT.md' });
     });
 }
