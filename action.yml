@@ -31,6 +31,10 @@ inputs:
     required: false
     description: 'Input changelog file name. (e.g. CHANGELOG_KTX_DRAFT.md) Default is CHANGELOG_DRAFT.md.'
     default: 'CHANGELOG_DRAFT.md'
+  extract_milestone_pr_infos:
+    required: false
+    description: 'If you want to extract the merged PR information from the milestone of relaese PR and add it to the release ticket, input the value `true`.'
+    default: 'false'
 runs:
   using: 'node16'
   main: 'dist/index.js'

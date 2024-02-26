@@ -138,7 +138,8 @@ async function buildCreateTicketParams(
       release_version,
       core.getInput('framework').toLowerCase()
     ),
-    changelog_file: core.getInput('changelog_file') || 'CHANGELOG_DRAFT.md'
+    changelog_file: core.getInput('changelog_file') || 'CHANGELOG_DRAFT.md',
+    extract_milestone_pr_infos: core.getBooleanInput('extract_milestone_pr_infos') || false
   }
 }
 
