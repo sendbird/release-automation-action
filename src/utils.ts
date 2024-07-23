@@ -12,7 +12,7 @@ export function extractVersion(branch: string): string {
     BRANCH_HOTFIX_PREFIX
   ])
   const match = branch.match(versionRegex)
-  if (match) return match[match.length - 1]
+  if (match) return match[3]
   return ''
 }
 
@@ -81,5 +81,8 @@ function getVersionRegex(inputs: string[]): RegExp {
   const joinedInputs = inputs.join('|')
   // release/0.0.0
   // release/ktx/0.0.0
-  return new RegExp(`(${joinedInputs})\\/(\\w*\\/)*v?(\\d+\\.\\d+\\.\\d+)`)
+  // release/compose/0.0.0-beta.0
+  return new RegExp(
+    `^(${joinedInputs})(\\/\\w+)*\\/v?(\\d+\\.\\d+\\.\\d+([\\-\\.]\\w+(\\.\\d+)*)?)$`
+  )
 }
