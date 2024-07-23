@@ -27,6 +27,8 @@ describe('extractVersion', () => {
   })
 
   test('should return the version with the tag', () => {
+    expect(extractVersion('hotfix/swift/v1.2.3-beta')).toBe('1.2.3-beta')
+
     expect(extractVersion('release/ktx/1.2.3-beta.0')).toBe('1.2.3-beta.0')
     expect(extractVersion('hotfix/ktx/1.2.3-beta.0')).toBe('1.2.3-beta.0')
 

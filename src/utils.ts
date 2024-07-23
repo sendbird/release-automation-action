@@ -83,6 +83,6 @@ function getVersionRegex(inputs: string[]): RegExp {
   // release/ktx/0.0.0
   // release/compose/0.0.0-beta.0
   return new RegExp(
-    `^(${joinedInputs})(\\/\\w+)*\\/v?(\\d+\\.\\d+\\.\\d+([\\-\\.]\\w+\\.\\d+)*)$`
+    `^(${joinedInputs})(\\/\\w+)*\\/v?(\\d+\\.\\d+\\.\\d+([\\-\\.]\\w+(\\.\\d+)*)?)$`
   )
 }
