@@ -16,7 +16,7 @@ describe('extractVersion', () => {
     expect(extractVersion('release/ktx/test/v1.2.3')).toBe('1.2.3')
   })
 
-  test('Should return an empty string if the branch convention is invalid', () => {
+  test('should return an empty string if the branch convention is invalid', () => {
     expect(extractVersion('v1.2.3')).toBe('')
     expect(extractVersion('1.2.3')).toBe('')
     expect(extractVersion('unknown/1.2.3')).toBe('')
@@ -24,5 +24,16 @@ describe('extractVersion', () => {
     expect(extractVersion('hotfixx/v1.2.3')).toBe('')
     expect(extractVersion('releases/1.2.3')).toBe('')
     expect(extractVersion('releases/v1.2.3')).toBe('')
+  })
+
+  test('should return the version with the tag', () => {
+    expect(extractVersion('release/ktx/1.2.3-beta.0')).toBe('1.2.3-beta.0')
+    expect(extractVersion('hotfix/ktx/1.2.3-beta.0')).toBe('1.2.3-beta.0')
+
+    expect(extractVersion('release/compose/1.2.3-beta.0')).toBe('1.2.3-beta.0')
+    expect(extractVersion('hotfix/compose/1.2.3-beta.0')).toBe('1.2.3-beta.0')
+
+    expect(extractVersion('release/swift/v1.2.3-rc.0')).toBe('1.2.3-rc.0')
+    expect(extractVersion('hotfix/swift/v1.2.3-rc.0')).toBe('1.2.3-rc.0')
   })
 })
