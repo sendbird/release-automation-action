@@ -26,16 +26,21 @@ export function replaceVersion(link: string, version: string): string {
   return link.replace(target, version)
 }
 
-export function buildProductJiraVersion(
+function platformWithFramework(platform: string, framework?: string): string {
+  return platform + (framework ? `-${framework}` : '')
+}
+
+export function buildJiraVersionPrefix(
   platform: string,
-  product: string
+  product: string,
+  framework = ''
 ): string {
   // {product}-{platform}[-{framework}]?
   // chat-ios, chat-android, live-uikit-js-react, uikit-js-react
 
-  return `${product}-${platform}`
+  const platformAndFramework = platformWithFramework(platform, framework)
+  return `${product}-${platformAndFramework}`
 }
-
 export function buildReleaseJiraVersion(
   platform: string,
   product: string,
@@ -45,8 +50,7 @@ export function buildReleaseJiraVersion(
   // {product}-{platform}[-{framework}]?@{version}
   // live-uikit-js-react@0.0.0, chat-ios@0.0.0
 
-  const platformAndFramework = platformWithFramework(platform, framework)
-  return `${product}-${platformAndFramework}@${version}`
+  return `${buildJiraVersionPrefix(platform, product, framework)}@${version}`
 }
 
 export function buildReleaseJiraTicket(
@@ -62,14 +66,11 @@ export function buildReleaseJiraTicket(
   return `[${capitalizeProduct(product)}] ${platformAndFramework}@${version}`
 }
 
-function platformWithFramework(platform: string, framework?: string): string {
-  return platform + (framework ? `-${framework}` : '')
-}
-
 function capitalizeProduct(str?: string): string {
   if (!str) return ''
   if (str === 'uikit') return 'UIKit'
   if (str === 'live_uikit' || str === 'live-uikit') return 'Live-UIKit'
+  if (str === 'chat-ai-widget') return 'Chat-AI-Widget'
   return capitalize(str)
 }
 

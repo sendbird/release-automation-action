@@ -40,7 +40,7 @@ Make sure to set the required secret CircleCI API token in the repository settin
 The action requires the following inputs:
 
 | name                          | description                                                                                                                                                                | required |
-|-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `gh_token`                    | The GitHub access token used to authenticate with the Octokit instance.                                                                                                    | Yes      |
 | `circleci_token`              | The CircleCI API token used to trigger the build and deploy workflow.                                                                                                      | Yes      |
 | `product`                     | The name of the product's SDK, such as `chat`, `calls`, `uikit`, `live`, or `live_uikit`.                                                                                  | Yes      |
@@ -67,3 +67,6 @@ You can pass `--test` parameter to command: `/bot create ticket --test`
 
 It mentions the `@{{product}}-approver` Slack group to notify ticket creation in the channel.
 If it's a new product, you need to add a Slack group with the corresponding name so that the appropriate people can be mentioned.
+
+The Slack message is sent in the following format:
+`@{{product}}-approver 🔖{{product_jira_version_prefix}} {{version}} release ticket has been created!`
