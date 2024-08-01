@@ -5,7 +5,7 @@ import fetch from 'node-fetch'
 import type {CommandArguments, CommandParameters} from './command/command'
 import {WORKFLOW_REPO, WORKFLOW_SCRIPT_VERSION, WORKFLOWS} from './constants'
 import {
-  buildProductJiraVersion,
+  buildJiraVersionPrefix,
   buildReleaseJiraTicket,
   buildReleaseJiraVersion,
   extractVersion,
@@ -121,7 +121,11 @@ async function buildCreateTicketParams(
     product_jira_project_key: core.getInput('product_jira_project_key'),
     product_jira_version_prefix:
       core.getInput('product_jira_version_prefix') ||
-      buildProductJiraVersion(basicParams.platform, basicParams.product),
+      buildJiraVersionPrefix(
+        basicParams.platform,
+        basicParams.product,
+        core.getInput('framework').toLowerCase()
+      ),
     release_branch: args.branch,
     release_version,
     release_gh_link: replaceVersion(latestReleaseLink, release_version),
