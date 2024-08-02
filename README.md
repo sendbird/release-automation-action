@@ -18,6 +18,7 @@ on:
     types: [created]
 jobs:
   pr-comment:
+    if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
