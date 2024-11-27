@@ -400,7 +400,7 @@ function getVersionRegex(inputs) {
     // release/0.0.0
     // release/ktx/0.0.0
     // release/compose/0.0.0-beta.0
-    return new RegExp(`^(${joinedInputs})(\\/\\w+)*\\/v?(\\d+\\.\\d+\\.\\d+([\\-\\.]\\w+(\\.\\d+)*)?)$`);
+    return new RegExp(`^(${joinedInputs})(\\/[-\\w]+)*\\/v?(\\d+\\.\\d+\\.\\d+([\\-\\.]\\w+(\\.\\d+)*)?)$`);
 }
 
 
