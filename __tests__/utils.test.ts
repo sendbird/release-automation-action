@@ -43,7 +43,11 @@ describe('extractVersion', () => {
     expect(extractVersion('hotfix/chat-ai-widget/v1.2.3')).toBe('1.2.3')
     expect(extractVersion('release/chat-ai-widget/v1.2.3')).toBe('1.2.3')
 
-    expect(extractVersion('release/ktx/message-template/v1.2.3-beta.0')).toBe('1.2.3-beta.0')
-    expect(extractVersion('hotfix/ktx/message-template/v1.2.3-beta.0')).toBe('1.2.3-beta.0')
+    expect(extractVersion('release/ktx/message-template/v1.2.3-beta.0')).toBe(
+      '1.2.3-beta.0'
+    )
+    expect(extractVersion('hotfix/ktx/message-template/v1.2.3-beta.0')).toBe(
+      '1.2.3-beta.0'
+    )
   })
 })
