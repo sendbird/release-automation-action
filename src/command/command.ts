@@ -16,6 +16,7 @@ export type CommandArguments = {
 
 export type CommandParameters = {
   test: boolean
+  ci: 'github' | 'circleci'
   [key: string]: unknown
 }
 

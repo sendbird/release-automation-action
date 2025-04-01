@@ -22,19 +22,32 @@ export function buildCommand(
     .trim()
     .split(' ')
 
-  const params = paramCandidates
-    .filter(it => it.startsWith(COMMAND_PARAM_PREFIX))
-    .map(it => it.replace(COMMAND_PARAM_PREFIX, ''))
-    .map(it => it.split('='))
-    .reduce<CommandParameters>(
-      (acc, [key, value = true]) => ({...acc, [key]: value}),
-      COMMAND_DEFAULT_PARAMS
-    )
-
+  const params = getCommandParams(paramCandidates)
   switch (action) {
     case COMMAND_ACTIONS.CREATE:
       return new CreateCommand(target, args, params)
     default:
       return null
   }
+}
+
+export function getCommandParams(paramCandidates: string[]): CommandParameters {
+  return paramCandidates
+    .filter(it => it.startsWith(COMMAND_PARAM_PREFIX))
+    .map(it => it.replace(COMMAND_PARAM_PREFIX, ''))
+    .map(it => it.split('='))
+    .reduce<CommandParameters>(
+      (acc, [key, value = true]) => ({...acc, [key]: parseValue(value)}),
+      COMMAND_DEFAULT_PARAMS
+    )
+}
+
+function parseValue(value: boolean | string): boolean | string {
+  if (value === 'true') {
+    return true
+  }
+  if (value === 'false') {
+    return false
+  }
+  return value
 }

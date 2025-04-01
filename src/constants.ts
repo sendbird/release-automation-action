@@ -20,5 +20,6 @@ export const WORKFLOWS = {
 
 export const SENDBIRD_BOT_USERNAME = 'sendbird-sdk-deployment'
 export const COMMAND_DEFAULT_PARAMS: CommandParameters = {
-  test: false
+  test: false,
+  ci: 'circleci'
 }
