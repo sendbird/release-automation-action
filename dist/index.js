@@ -368,7 +368,7 @@ function requestToCircleCI({ args, parameters, repository }) {
             core.warning("It looks like bot can't access to project" +
                 '\n1. Please add bot as a admin to the GitHub project and add User Key in CircleCI Settings > SSH Keys' +
                 '\n2. https://github.com/settings/keys > Configure SSO > Authorize');
-            throw new Error('Bot cannot access to project');
+            throw new Error('Bot is unable to access the project');
         }
         return {
             repository,
@@ -385,7 +385,9 @@ function requestToGitHubActions({ args, parameters, repository }) {
             repo,
             workflow_id,
             ref: 'main',
-            inputs: Object.assign({}, parameters)
+            inputs: {
+                data: JSON.stringify(parameters)
+            }
         });
         return {
             repository,
