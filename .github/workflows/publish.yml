@@ -12,15 +12,15 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - run: |
           git checkout -b release/${{ github.event.inputs.version }}
           git push --set-upstream origin release/${{ github.event.inputs.version }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 18.x
       - run: yarn install --immutable
       - name: 'set environments'
         run: |
