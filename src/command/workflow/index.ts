@@ -1,23 +1,16 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import fetch from 'node-fetch'
 
-import type {CommandArguments, CommandParameters} from './command/command'
-import {WORKFLOW_REPO, WORKFLOW_SCRIPT_VERSION, WORKFLOWS} from './constants'
+import type {CommandArguments, CommandParameters} from '../command'
+import {WORKFLOW_SCRIPT_VERSION, WORKFLOWS} from '../../constants'
 import {
   buildJiraVersionPrefix,
   buildReleaseJiraTicket,
   buildReleaseJiraVersion,
   extractVersion,
   replaceVersion
-} from './utils'
-
-type WorkflowResponse = {
-  response: {
-    [key: string]: unknown
-  }
-  repository: string
-}
+} from '../../utils'
+import {triggerCreateTicketWorkflow} from './triggerCreateTicketWorkflow'
 
 type BasicRequestParams = {
   script_version: string
@@ -26,33 +19,7 @@ type BasicRequestParams = {
   repo_name: string
 }
 
-const workflowRequest = async (
-  args: CommandArguments,
-  parameters: object,
-  repository = WORKFLOW_REPO
-): Promise<WorkflowResponse> => {
-  const response = await fetch(
-    `https://circleci.com/api/v2/project/gh/${repository}/pipeline`,
-    {
-      method: 'POST',
-      headers: {
-        'Circle-Token': args.circleci_token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({parameters})
-    }
-  )
-
-  return {
-    response: await response.json(),
-    repository
-  }
-}
-
 export const workflow = {
-  log(message: string) {
-    core.info(`Workflow: ${message}`)
-  },
   async createTicket(
     commandArgs: CommandArguments,
     commandParams: CommandParameters
@@ -63,38 +30,17 @@ export const workflow = {
     )
 
     if ('test' in ticketParams && ticketParams.test) {
-      this.log('Run on test environment')
+      core.info('Workflow: Run on test environment')
     }
 
-    const {repository, response} = await workflowRequest(
-      commandArgs,
-      ticketParams
-    )
-    this.log(`response: ${JSON.stringify(response, null, 2)}`)
-
-    if (response.message === 'Project not found') {
-      this.log(
-        'Please check first, valid token has been provided to CI' +
-          "\nIf not, it looks like sendbird org authorize on the bot's GitHub account has been broken." +
-          "\n1. Please SSO log in and re-authenticate using bot's GitHub account" +
-          '\n2. https://app.circleci.com/settings/user > Refresh permissions'
-      )
-      throw new Error(
-        "Bot's GitHub account seems not authorized to organization"
-      )
-    }
-
-    if (response.message === 'Permission denied') {
-      this.log(
-        "It looks like bot can't access to project" +
-          '\n1. Please add bot as a admin to the GitHub project and add User Key in CircleCI Settings > SSH Keys' +
-          '\n2. https://github.com/settings/keys > Configure SSO > Authorize'
-      )
-      throw new Error('Bot cannot access to project')
-    }
+    const {workflowUrl} = await triggerCreateTicketWorkflow({
+      args: commandArgs,
+      parameters: ticketParams,
+      ci: commandParams.ci
+    })
 
     return {
-      workflowUrl: `https://app.circleci.com/pipelines/github/${repository}/${response.number}`
+      workflowUrl
     }
   }
 }

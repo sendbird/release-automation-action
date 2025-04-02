@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github = __importStar(__nccwpck_require__(5438));
 const command_1 = __nccwpck_require__(1521);
 const utils_1 = __nccwpck_require__(918);
-const workflow_1 = __nccwpck_require__(998);
+const workflow_1 = __nccwpck_require__(3974);
 const constants_1 = __nccwpck_require__(5105);
 class CreateCommand extends command_1.CommandAbstract {
     run() {
@@ -157,7 +157,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.buildCommand = void 0;
+exports.getCommandParams = exports.buildCommand = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const constants_1 = __nccwpck_require__(5105);
 const command_create_1 = __importDefault(__nccwpck_require__(4762));
@@ -170,11 +170,7 @@ function buildCommand(text, args) {
         .replace(constants_1.COMMAND_TRIGGER, '')
         .trim()
         .split(' ');
-    const params = paramCandidates
-        .filter(it => it.startsWith(constants_1.COMMAND_PARAM_PREFIX))
-        .map(it => it.replace(constants_1.COMMAND_PARAM_PREFIX, ''))
-        .map(it => it.split('='))
-        .reduce((acc, [key, value = true]) => (Object.assign(Object.assign({}, acc), { [key]: value })), constants_1.COMMAND_DEFAULT_PARAMS);
+    const params = getCommandParams(paramCandidates);
     switch (action) {
         case constants_1.COMMAND_ACTIONS.CREATE:
             return new command_create_1.default(target, args, params);
@@ -183,6 +179,220 @@ function buildCommand(text, args) {
     }
 }
 exports.buildCommand = buildCommand;
+function getCommandParams(paramCandidates) {
+    return paramCandidates
+        .filter(it => it.startsWith(constants_1.COMMAND_PARAM_PREFIX))
+        .map(it => it.replace(constants_1.COMMAND_PARAM_PREFIX, ''))
+        .map(it => it.split('='))
+        .reduce((acc, [key, value = true]) => (Object.assign(Object.assign({}, acc), { [key]: parseValue(value) })), constants_1.COMMAND_DEFAULT_PARAMS);
+}
+exports.getCommandParams = getCommandParams;
+function parseValue(value) {
+    if (value === 'true') {
+        return true;
+    }
+    if (value === 'false') {
+        return false;
+    }
+    return value;
+}
+
+
+/***/ }),
+
+/***/ 3974:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.workflow = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const constants_1 = __nccwpck_require__(5105);
+const utils_1 = __nccwpck_require__(918);
+const triggerCreateTicketWorkflow_1 = __nccwpck_require__(1276);
+exports.workflow = {
+    createTicket(commandArgs, commandParams) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const ticketParams = yield buildCreateTicketParams(commandArgs, commandParams);
+            if ('test' in ticketParams && ticketParams.test) {
+                core.info('Workflow: Run on test environment');
+            }
+            const { workflowUrl } = yield (0, triggerCreateTicketWorkflow_1.triggerCreateTicketWorkflow)({
+                args: commandArgs,
+                parameters: ticketParams,
+                ci: commandParams.ci
+            });
+            return {
+                workflowUrl
+            };
+        });
+    }
+};
+function buildCreateTicketParams(args, params) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
+        const release_version = (0, utils_1.extractVersion)(args.branch);
+        let latestReleaseLink = '';
+        try {
+            const latestRelease = yield args.octokit.rest.repos.getLatestRelease(github.context.repo);
+            latestReleaseLink = latestRelease.data.html_url;
+        }
+        catch (e) {
+            latestReleaseLink = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases/tag/0.0.0`;
+        }
+        return Object.assign(Object.assign({}, basicParams), { test: core.getBooleanInput('test') || params.test, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix') ||
+                (0, utils_1.buildJiraVersionPrefix)(basicParams.platform, basicParams.product, core.getInput('framework').toLowerCase()), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestReleaseLink, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), changelog_file: core.getInput('changelog_file') || 'CHANGELOG_DRAFT.md' });
+    });
+}
+function buildBasicRequestParams(workflowName) {
+    return {
+        [workflowName]: true,
+        script_version: constants_1.WORKFLOW_SCRIPT_VERSION,
+        platform: core.getInput('platform').toLowerCase(),
+        product: core.getInput('product').toLowerCase(),
+        repo_name: github.context.repo.repo
+    };
+}
+
+
+/***/ }),
+
+/***/ 1276:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.triggerCreateTicketWorkflow = void 0;
+const constants_1 = __nccwpck_require__(5105);
+const node_fetch_1 = __importDefault(__nccwpck_require__(467));
+const core = __importStar(__nccwpck_require__(2186));
+const triggerCreateTicketWorkflow = ({ args, parameters, ci, repository = constants_1.WORKFLOW_REPO }) => __awaiter(void 0, void 0, void 0, function* () {
+    if (ci === 'github') {
+        return requestToGitHubActions({ args, parameters, ci, repository });
+    }
+    if (ci === 'circleci') {
+        return requestToCircleCI({ args, parameters, ci, repository });
+    }
+    throw new Error(`Invalid CI type: ${ci}`);
+});
+exports.triggerCreateTicketWorkflow = triggerCreateTicketWorkflow;
+function requestToCircleCI({ args, parameters, repository }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield (0, node_fetch_1.default)(`https://circleci.com/api/v2/project/gh/${repository}/pipeline`, {
+            method: 'POST',
+            headers: {
+                'Circle-Token': args.circleci_token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ parameters })
+        });
+        const data = yield response.json();
+        if (data.message === 'Project not found') {
+            core.warning('Please check first, valid token has been provided to CI' +
+                "\nIf not, it looks like sendbird org authorize on the bot's GitHub account has been broken." +
+                "\n1. Please SSO log in and re-authenticate using bot's GitHub account" +
+                '\n2. https://app.circleci.com/settings/user > Refresh permissions');
+            throw new Error("Bot's GitHub account seems not authorized to organization");
+        }
+        if (data.message === 'Permission denied') {
+            core.warning("It looks like bot can't access to project" +
+                '\n1. Please add bot as a admin to the GitHub project and add User Key in CircleCI Settings > SSH Keys' +
+                '\n2. https://github.com/settings/keys > Configure SSO > Authorize');
+            throw new Error('Bot cannot access to project');
+        }
+        return {
+            repository,
+            workflowUrl: `https://app.circleci.com/pipelines/github/${repository}/${data.number}`
+        };
+    });
+}
+function requestToGitHubActions({ args, parameters, repository }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const [owner, repo] = repository.split('/');
+        const workflow_id = 'create_ticket.yml';
+        yield args.octokit.rest.actions.createWorkflowDispatch({
+            owner,
+            repo,
+            workflow_id,
+            ref: 'main',
+            inputs: Object.assign({}, parameters)
+        });
+        return {
+            repository,
+            workflowUrl: `https://github.com/sendbird/sdk-deployment/actions/workflows/${workflow_id}`
+        };
+    });
+}
 
 
 /***/ }),
@@ -211,7 +421,8 @@ exports.WORKFLOWS = {
 };
 exports.SENDBIRD_BOT_USERNAME = 'sendbird-sdk-deployment';
 exports.COMMAND_DEFAULT_PARAMS = {
-    test: false
+    test: false,
+    ci: 'circleci'
 };
 
 
@@ -401,127 +612,6 @@ function getVersionRegex(inputs) {
     // release/ktx/0.0.0
     // release/compose/0.0.0-beta.0
     return new RegExp(`^(${joinedInputs})(\\/[-\\w]+)*\\/v?(\\d+\\.\\d+\\.\\d+([\\-\\.]\\w+(\\.\\d+)*)?)$`);
-}
-
-
-/***/ }),
-
-/***/ 998:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.workflow = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const github = __importStar(__nccwpck_require__(5438));
-const node_fetch_1 = __importDefault(__nccwpck_require__(467));
-const constants_1 = __nccwpck_require__(5105);
-const utils_1 = __nccwpck_require__(918);
-const workflowRequest = (args, parameters, repository = constants_1.WORKFLOW_REPO) => __awaiter(void 0, void 0, void 0, function* () {
-    const response = yield (0, node_fetch_1.default)(`https://circleci.com/api/v2/project/gh/${repository}/pipeline`, {
-        method: 'POST',
-        headers: {
-            'Circle-Token': args.circleci_token,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ parameters })
-    });
-    return {
-        response: yield response.json(),
-        repository
-    };
-});
-exports.workflow = {
-    log(message) {
-        core.info(`Workflow: ${message}`);
-    },
-    createTicket(commandArgs, commandParams) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const ticketParams = yield buildCreateTicketParams(commandArgs, commandParams);
-            if ('test' in ticketParams && ticketParams.test) {
-                this.log('Run on test environment');
-            }
-            const { repository, response } = yield workflowRequest(commandArgs, ticketParams);
-            this.log(`response: ${JSON.stringify(response, null, 2)}`);
-            if (response.message === 'Project not found') {
-                this.log('Please check first, valid token has been provided to CI' +
-                    "\nIf not, it looks like sendbird org authorize on the bot's GitHub account has been broken." +
-                    "\n1. Please SSO log in and re-authenticate using bot's GitHub account" +
-                    '\n2. https://app.circleci.com/settings/user > Refresh permissions');
-                throw new Error("Bot's GitHub account seems not authorized to organization");
-            }
-            if (response.message === 'Permission denied') {
-                this.log("It looks like bot can't access to project" +
-                    '\n1. Please add bot as a admin to the GitHub project and add User Key in CircleCI Settings > SSH Keys' +
-                    '\n2. https://github.com/settings/keys > Configure SSO > Authorize');
-                throw new Error('Bot cannot access to project');
-            }
-            return {
-                workflowUrl: `https://app.circleci.com/pipelines/github/${repository}/${response.number}`
-            };
-        });
-    }
-};
-function buildCreateTicketParams(args, params) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const basicParams = buildBasicRequestParams(constants_1.WORKFLOWS.CREATE_TICKET);
-        const release_version = (0, utils_1.extractVersion)(args.branch);
-        let latestReleaseLink = '';
-        try {
-            const latestRelease = yield args.octokit.rest.repos.getLatestRelease(github.context.repo);
-            latestReleaseLink = latestRelease.data.html_url;
-        }
-        catch (e) {
-            latestReleaseLink = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases/tag/0.0.0`;
-        }
-        return Object.assign(Object.assign({}, basicParams), { test: core.getBooleanInput('test') || params.test, product_jira_project_key: core.getInput('product_jira_project_key'), product_jira_version_prefix: core.getInput('product_jira_version_prefix') ||
-                (0, utils_1.buildJiraVersionPrefix)(basicParams.platform, basicParams.product, core.getInput('framework').toLowerCase()), release_branch: args.branch, release_version, release_gh_link: (0, utils_1.replaceVersion)(latestReleaseLink, release_version), release_pr_number: github.context.issue.number, release_jira_version: (0, utils_1.buildReleaseJiraVersion)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), release_jira_ticket: (0, utils_1.buildReleaseJiraTicket)(basicParams.platform, basicParams.product, release_version, core.getInput('framework').toLowerCase()), changelog_file: core.getInput('changelog_file') || 'CHANGELOG_DRAFT.md' });
-    });
-}
-function buildBasicRequestParams(workflowName) {
-    return {
-        [workflowName]: true,
-        script_version: constants_1.WORKFLOW_SCRIPT_VERSION,
-        platform: core.getInput('platform').toLowerCase(),
-        product: core.getInput('product').toLowerCase(),
-        repo_name: github.context.repo.repo
-    };
 }
 
 

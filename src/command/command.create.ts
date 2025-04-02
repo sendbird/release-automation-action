@@ -1,7 +1,7 @@
 import * as github from '@actions/github'
 import {CommandAbstract} from './command'
 import {isReleaseBranch} from '../utils'
-import {workflow} from '../workflow'
+import {workflow} from './workflow'
 import {COMMAND_TARGETS} from '../constants'
 
 export default class CreateCommand extends CommandAbstract {
