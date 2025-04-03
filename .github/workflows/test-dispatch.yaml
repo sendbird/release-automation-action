@@ -1,0 +1,23 @@
+name: PR Comment Bot - dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      test:
+        description: 'test'
+        required: false
+        type: string
+jobs:
+  pr-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          circleci_token: ${{ secrets.CIRCLECI_TOKEN }}
+          product: 'uikit'
+          platform: 'rn'
+          product_jira_project_key: 'UIKIT'
+          product_jira_version_prefix: 'rn_uikit'
+          test: true
+          ci: 'github'
