@@ -11,10 +11,19 @@ export function buildCommand(text: string, args: CommandArguments): Command | nu
 
   const [action, target, ...paramCandidates] = text.replace(COMMAND_TRIGGER, '').trim().split(' ');
 
-  const params = getCommandParams(paramCandidates);
+  const params = getCommandParams(paramCandidates, {
+    ci: core.getInput('ci') as 'github' | 'circleci',
+    test: core.getBooleanInput('test'),
+  });
+
+  if (params.ci !== 'circleci' && params.ci !== 'github') {
+    core.setFailed('Invalid CI type. Please use "circleci" or "github".');
+    throw new Error('Invalid CI type');
+  }
 
   if (params.ci === 'circleci' && !args.circleci_token) {
-    core.warning('BuildCommand: CircleCI token is not provided');
+    core.setFailed('CircleCI token is not provided');
+    throw new Error('CircleCI token is not provided');
   }
 
   switch (action) {
@@ -25,8 +34,8 @@ export function buildCommand(text: string, args: CommandArguments): Command | nu
   }
 }
 
-export function getCommandParams(paramCandidates: string[]): CommandParameters {
-  return paramCandidates
+export function getCommandParams(paramCandidates: string[], core?: Partial<CommandParameters>): CommandParameters {
+  const params = paramCandidates
     .filter((it) => it.startsWith(COMMAND_PARAM_PREFIX))
     .map((it) => it.replace(COMMAND_PARAM_PREFIX, ''))
     .map((it) => it.split('='))
@@ -34,6 +43,11 @@ export function getCommandParams(paramCandidates: string[]): CommandParameters {
       (acc, [key, value = true]) => ({ ...acc, [key]: parseValue(value) }),
       COMMAND_DEFAULT_PARAMS,
     );
+
+  return {
+    test: core?.test || params.test || false,
+    ci: core?.ci || params.ci || 'circleci',
+  };
 }
 
 function parseValue(value: boolean | string): boolean | string {

@@ -28,6 +28,8 @@ export const triggerCreateTicketWorkflow = async ({
   }
 
   if (ci === 'circleci') {
+    if ('ci' in parameters) delete parameters.ci;
+
     return requestToCircleCI({ args, parameters, ci, repository, test });
   }
 

@@ -26,20 +26,15 @@ export const workflow = {
   ): Promise<{ workflowUrl: string }> {
     const ticketParams = await buildCreateTicketParams(commandArgs, commandParams);
 
-    if ('test' in ticketParams && ticketParams.test) {
+    if ('test' in commandParams && commandParams.test) {
       core.info('Workflow: Run on test environment');
-    }
-
-    if (ticketParams.ci !== 'circleci' && ticketParams.ci !== 'github') {
-      core.setFailed('Invalid CI type. Please use "circleci" or "github".');
-      throw new Error('Invalid CI type');
     }
 
     const { workflowUrl } = await triggerCreateTicketWorkflow({
       args: commandArgs,
       parameters: ticketParams,
-      ci: ticketParams.ci,
-      test: ticketParams.test,
+      ci: commandParams.ci,
+      test: commandParams.test,
     });
 
     return {
@@ -47,10 +42,7 @@ export const workflow = {
     };
   },
 };
-async function buildCreateTicketParams(
-  args: CommandArguments,
-  params: CommandParameters,
-): Promise<Record<string, any> & { ci: string; test: boolean }> {
+async function buildCreateTicketParams(args: CommandArguments, params: CommandParameters): Promise<object> {
   const basicParams = buildBasicRequestParams(WORKFLOWS.CREATE_TICKET);
   const release_version = extractVersion(args.branch);
 
@@ -64,8 +56,8 @@ async function buildCreateTicketParams(
 
   return {
     ...basicParams,
-    test: core.getBooleanInput('test') || params.test,
-    ci: core.getInput('ci') || params.ci,
+    test: params.test,
+    ci: params.ci,
     product_jira_project_key: core.getInput('product_jira_project_key'),
     product_jira_version_prefix:
       core.getInput('product_jira_version_prefix') ||

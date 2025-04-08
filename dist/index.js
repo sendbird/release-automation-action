@@ -32744,9 +32744,17 @@ function buildCommand(text, args) {
         return null;
     }
     const [action, target, ...paramCandidates] = text.replace(constants_1.COMMAND_TRIGGER, '').trim().split(' ');
-    const params = getCommandParams(paramCandidates);
+    const params = getCommandParams(paramCandidates, {
+        ci: core.getInput('ci'),
+        test: core.getBooleanInput('test'),
+    });
+    if (params.ci !== 'circleci' && params.ci !== 'github') {
+        core.setFailed('Invalid CI type. Please use "circleci" or "github".');
+        throw new Error('Invalid CI type');
+    }
     if (params.ci === 'circleci' && !args.circleci_token) {
-        core.warning('BuildCommand: CircleCI token is not provided');
+        core.setFailed('CircleCI token is not provided');
+        throw new Error('CircleCI token is not provided');
     }
     switch (action) {
         case constants_1.COMMAND_ACTIONS.CREATE:
@@ -32755,12 +32763,16 @@ function buildCommand(text, args) {
             return null;
     }
 }
-function getCommandParams(paramCandidates) {
-    return paramCandidates
+function getCommandParams(paramCandidates, core) {
+    const params = paramCandidates
         .filter((it) => it.startsWith(constants_1.COMMAND_PARAM_PREFIX))
         .map((it) => it.replace(constants_1.COMMAND_PARAM_PREFIX, ''))
         .map((it) => it.split('='))
         .reduce((acc, [key, value = true]) => ({ ...acc, [key]: parseValue(value) }), constants_1.COMMAND_DEFAULT_PARAMS);
+    return {
+        test: core?.test || params.test || false,
+        ci: core?.ci || params.ci || 'circleci',
+    };
 }
 function parseValue(value) {
     if (value === 'true') {
@@ -32823,18 +32835,14 @@ const triggerCreateTicketWorkflow_1 = __nccwpck_require__(6914);
 exports.workflow = {
     async createTicket(commandArgs, commandParams) {
         const ticketParams = await buildCreateTicketParams(commandArgs, commandParams);
-        if ('test' in ticketParams && ticketParams.test) {
+        if ('test' in commandParams && commandParams.test) {
             core.info('Workflow: Run on test environment');
-        }
-        if (ticketParams.ci !== 'circleci' && ticketParams.ci !== 'github') {
-            core.setFailed('Invalid CI type. Please use "circleci" or "github".');
-            throw new Error('Invalid CI type');
         }
         const { workflowUrl } = await (0, triggerCreateTicketWorkflow_1.triggerCreateTicketWorkflow)({
             args: commandArgs,
             parameters: ticketParams,
-            ci: ticketParams.ci,
-            test: ticketParams.test,
+            ci: commandParams.ci,
+            test: commandParams.test,
         });
         return {
             workflowUrl,
@@ -32854,8 +32862,8 @@ async function buildCreateTicketParams(args, params) {
     }
     return {
         ...basicParams,
-        test: core.getBooleanInput('test') || params.test,
-        ci: core.getInput('ci') || params.ci,
+        test: params.test,
+        ci: params.ci,
         product_jira_project_key: core.getInput('product_jira_project_key'),
         product_jira_version_prefix: core.getInput('product_jira_version_prefix') ||
             (0, utils_1.buildJiraVersionPrefix)(basicParams.platform, basicParams.product, core.getInput('framework').toLowerCase()),
@@ -32932,6 +32940,8 @@ const triggerCreateTicketWorkflow = async ({ args, parameters, ci, test, reposit
         return requestToGitHubActions({ args, parameters, ci, repository, test });
     }
     if (ci === 'circleci') {
+        if ('ci' in parameters)
+            delete parameters.ci;
         return requestToCircleCI({ args, parameters, ci, repository, test });
     }
     throw new Error(`Invalid CI type: ${ci}`);
