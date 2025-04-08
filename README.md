@@ -51,6 +51,7 @@ The action requires the following inputs:
 | `framework`                   | (Optional) The framework for the product's SDK, such as `react`.                                                                                                           | No       |
 | `test`                        | (Optional) Ticket creation and slack alerts are executed in the test environment (release board, slack channel). (default: false)                                          | No       |
 | `changelog_file`              | (Optional) Changelog file name (e.g. CHANGELOG_KTX_DRAFT.md). (default: CHANGELOG_DRAFT.md)                                                                                | No       |
+| `ci`                          | (Optional) The CI provider to use for the build and deploy workflow. Supported values: `circleci`, `github`. (default: circleci)                                           | No       |
 
 ## Commands
 
@@ -60,9 +61,10 @@ You can use the following commands in the PR comment:
 | -------------------- | ------------------------------------- |
 | `/bot create ticket` | Creates a new release ticket in Jira. |
 
-## Test
+### Command parameters
 
-You can pass `--test` parameter to command: `/bot create ticket --test`
+- You can pass `--test` parameter to command: `/bot create ticket --test`
+- You can pass `--ci` parameter to command: `/bot create ticket --ci=github`
 
 ## Slack notifications
 
