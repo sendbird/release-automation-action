@@ -32958,16 +32958,23 @@ async function requestToCircleCI({ args, parameters, repository }) {
 }
 async function requestToGitHubActions({ args, parameters, repository }) {
     const [owner, repo] = repository.split('/');
-    const workflow_id = 'create_ticket.yml';
-    await args.octokit.rest.actions.createWorkflowDispatch({
-        owner,
-        repo,
-        workflow_id,
-        ref: 'main',
-        inputs: {
-            data: JSON.stringify(parameters),
-        },
-    });
+    const workflow_id = 'create-ticket.yml';
+    try {
+        core.info(`owner/repo: ${owner}/${repo}`);
+        core.info(`workflow_id: ${workflow_id}`);
+        await args.octokit.rest.actions.createWorkflowDispatch({
+            owner,
+            repo,
+            workflow_id,
+            ref: 'main',
+            inputs: {
+                data: JSON.stringify(parameters),
+            },
+        });
+    }
+    catch (error) {
+        core.info(`Error occurred while triggering GitHub Actions workflow: ${error}`);
+    }
     return {
         repository,
         workflowUrl: `https://github.com/sendbird/sdk-deployment/actions/workflows/${workflow_id}`,

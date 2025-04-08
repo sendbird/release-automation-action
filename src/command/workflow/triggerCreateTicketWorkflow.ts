@@ -71,17 +71,24 @@ async function requestToCircleCI({ args, parameters, repository }: Required<Para
 
 async function requestToGitHubActions({ args, parameters, repository }: Required<Params>): Promise<Response> {
   const [owner, repo] = repository.split('/');
-  const workflow_id = 'create_ticket.yml';
+  const workflow_id = 'create-ticket.yml';
 
-  await args.octokit.rest.actions.createWorkflowDispatch({
-    owner,
-    repo,
-    workflow_id,
-    ref: 'main',
-    inputs: {
-      data: JSON.stringify(parameters),
-    },
-  });
+  try {
+    core.info(`owner/repo: ${owner}/${repo}`);
+    core.info(`workflow_id: ${workflow_id}`);
+
+    await args.octokit.rest.actions.createWorkflowDispatch({
+      owner,
+      repo,
+      workflow_id,
+      ref: 'main',
+      inputs: {
+        data: JSON.stringify(parameters),
+      },
+    });
+  } catch (error) {
+    core.info(`Error occurred while triggering GitHub Actions workflow: ${error}`);
+  }
 
   return {
     repository,
