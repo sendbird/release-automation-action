@@ -73,15 +73,19 @@ async function requestToGitHubActions({ args, parameters, repository }: Required
   const [owner, repo] = repository.split('/');
   const workflow_id = 'create_ticket.yml';
 
-  await args.octokit.rest.actions.createWorkflowDispatch({
-    owner,
-    repo,
-    workflow_id,
-    ref: 'main',
-    inputs: {
-      data: JSON.stringify(parameters),
-    },
-  });
+  try {
+    await args.octokit.rest.actions.createWorkflowDispatch({
+      owner,
+      repo,
+      workflow_id,
+      ref: 'main',
+      inputs: {
+        data: JSON.stringify(parameters),
+      },
+    });
+  } catch (error) {
+    core.info('Error occurred while triggering GitHub Actions workflow:', error);
+  }
 
   return {
     repository,
