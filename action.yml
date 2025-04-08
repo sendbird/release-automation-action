@@ -5,9 +5,6 @@ inputs:
   gh_token:
     required: true
     description: 'Input GitHub access token here'
-  circleci_token:
-    required: true
-    description: 'Input CircleCI API token here'
   platform:
     required: true
     description: 'Input SDK platform here, e.g. ios, android, js, rn, flutter'
@@ -35,6 +32,9 @@ inputs:
     required: false
     description: 'Input CI name. (e.g. circleci, github) Default is circleci.'
     default: 'circleci'
+  circleci_token:
+    required: false
+    description: 'Input CircleCI API token here'
 runs:
   using: 'node16'
   main: 'dist/index.js'
