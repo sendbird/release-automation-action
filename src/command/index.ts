@@ -1,40 +1,42 @@
-import * as core from '@actions/core'
-import type {Command, CommandArguments, CommandParameters} from './command'
-import {
-  COMMAND_ACTIONS,
-  COMMAND_DEFAULT_PARAMS,
-  COMMAND_PARAM_PREFIX,
-  COMMAND_TRIGGER
-} from '../constants'
-import CreateCommand from './command.create'
+import * as core from '@actions/core';
+import type { Command, CommandArguments, CommandParameters } from './command';
+import { COMMAND_ACTIONS, COMMAND_DEFAULT_PARAMS, COMMAND_PARAM_PREFIX, COMMAND_TRIGGER } from '../constants';
+import CreateCommand from './command.create';
 
-export function buildCommand(
-  text: string,
-  args: CommandArguments
-): Command | null {
+export function buildCommand(text: string, args: CommandArguments): Command | null {
   if (!text.startsWith(COMMAND_TRIGGER) || !args.isPRComment) {
-    core.info('BuildCommand: Invalid command or not a PR comment')
-    return null
+    core.info('BuildCommand: Invalid command or not a PR comment');
+    return null;
   }
 
-  const [action, target, ...paramCandidates] = text
-    .replace(COMMAND_TRIGGER, '')
-    .trim()
-    .split(' ')
+  const [action, target, ...paramCandidates] = text.replace(COMMAND_TRIGGER, '').trim().split(' ');
 
-  const params = paramCandidates
-    .filter(it => it.startsWith(COMMAND_PARAM_PREFIX))
-    .map(it => it.replace(COMMAND_PARAM_PREFIX, ''))
-    .map(it => it.split('='))
-    .reduce<CommandParameters>(
-      (acc, [key, value = true]) => ({...acc, [key]: value}),
-      COMMAND_DEFAULT_PARAMS
-    )
-
+  const params = getCommandParams(paramCandidates);
   switch (action) {
     case COMMAND_ACTIONS.CREATE:
-      return new CreateCommand(target, args, params)
+      return new CreateCommand(target, args, params);
     default:
-      return null
+      return null;
   }
+}
+
+export function getCommandParams(paramCandidates: string[]): CommandParameters {
+  return paramCandidates
+    .filter((it) => it.startsWith(COMMAND_PARAM_PREFIX))
+    .map((it) => it.replace(COMMAND_PARAM_PREFIX, ''))
+    .map((it) => it.split('='))
+    .reduce<CommandParameters>(
+      (acc, [key, value = true]) => ({ ...acc, [key]: parseValue(value) }),
+      COMMAND_DEFAULT_PARAMS,
+    );
+}
+
+function parseValue(value: boolean | string): boolean | string {
+  if (value === 'true') {
+    return true;
+  }
+  if (value === 'false') {
+    return false;
+  }
+  return value;
 }

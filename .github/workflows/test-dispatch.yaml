@@ -1,7 +1,11 @@
-name: PR Comment Bot
+name: PR Comment Bot - dispatch
 on:
-  issue_comment:
-    types: [created]
+  workflow_dispatch:
+    inputs:
+      test:
+        description: 'test'
+        required: false
+        type: string
 jobs:
   pr-comment:
     runs-on: ubuntu-latest
@@ -16,3 +20,4 @@ jobs:
           product_jira_project_key: 'UIKIT'
           product_jira_version_prefix: 'rn_uikit'
           test: true
+          ci: 'github'
