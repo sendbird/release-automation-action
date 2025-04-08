@@ -34,6 +34,7 @@ export const workflow = {
       args: commandArgs,
       parameters: ticketParams,
       ci: commandParams.ci,
+      test: commandParams.test,
     });
 
     return {

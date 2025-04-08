@@ -32830,6 +32830,7 @@ exports.workflow = {
             args: commandArgs,
             parameters: ticketParams,
             ci: commandParams.ci,
+            test: commandParams.test,
         });
         return {
             workflowUrl,
@@ -32921,12 +32922,12 @@ exports.triggerCreateTicketWorkflow = void 0;
 const constants_1 = __nccwpck_require__(7242);
 const node_fetch_1 = __importDefault(__nccwpck_require__(6705));
 const core = __importStar(__nccwpck_require__(7484));
-const triggerCreateTicketWorkflow = async ({ args, parameters, ci, repository = constants_1.WORKFLOW_REPO, }) => {
+const triggerCreateTicketWorkflow = async ({ args, parameters, ci, test, repository = constants_1.WORKFLOW_REPO, }) => {
     if (ci === 'github') {
-        return requestToGitHubActions({ args, parameters, ci, repository });
+        return requestToGitHubActions({ args, parameters, ci, repository, test });
     }
     if (ci === 'circleci') {
-        return requestToCircleCI({ args, parameters, ci, repository });
+        return requestToCircleCI({ args, parameters, ci, repository, test });
     }
     throw new Error(`Invalid CI type: ${ci}`);
 };
@@ -32959,25 +32960,19 @@ async function requestToCircleCI({ args, parameters, repository }) {
         workflowUrl: `https://app.circleci.com/pipelines/github/${repository}/${data.number}`,
     };
 }
-async function requestToGitHubActions({ args, parameters, repository }) {
+async function requestToGitHubActions({ args, parameters, test, repository }) {
     const [owner, repo] = repository.split('/');
     const workflow_id = 'create-ticket.yml';
-    try {
-        core.info(`owner/repo: ${owner}/${repo}`);
-        core.info(`workflow_id: ${workflow_id}`);
-        await args.octokit.rest.actions.createWorkflowDispatch({
-            owner,
-            repo,
-            workflow_id,
-            ref: 'main',
-            inputs: {
-                data: JSON.stringify(parameters),
-            },
-        });
-    }
-    catch (error) {
-        core.info(`Error occurred while triggering GitHub Actions workflow: ${error}`);
-    }
+    await args.octokit.rest.actions.createWorkflowDispatch({
+        owner,
+        repo,
+        workflow_id,
+        ref: 'main',
+        inputs: {
+            test: String(test),
+            data: JSON.stringify(parameters),
+        },
+    });
     return {
         repository,
         workflowUrl: `https://github.com/sendbird/sdk-deployment/actions/workflows/${workflow_id}`,
