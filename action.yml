@@ -31,6 +31,10 @@ inputs:
     required: false
     description: 'Input changelog file name. (e.g. CHANGELOG_KTX_DRAFT.md) Default is CHANGELOG_DRAFT.md.'
     default: 'CHANGELOG_DRAFT.md'
+  ci:
+    required: false
+    description: 'Input CI name. (e.g. circleci, github) Default is circleci.'
+    default: 'circleci'
 runs:
   using: 'node16'
   main: 'dist/index.js'
