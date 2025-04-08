@@ -32745,6 +32745,9 @@ function buildCommand(text, args) {
     }
     const [action, target, ...paramCandidates] = text.replace(constants_1.COMMAND_TRIGGER, '').trim().split(' ');
     const params = getCommandParams(paramCandidates);
+    if (params.ci === 'circleci' && !args.circleci_token) {
+        core.warning('BuildCommand: CircleCI token is not provided');
+    }
     switch (action) {
         case constants_1.COMMAND_ACTIONS.CREATE:
             return new command_create_1.default(target, args, params);

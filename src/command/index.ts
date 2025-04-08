@@ -12,6 +12,11 @@ export function buildCommand(text: string, args: CommandArguments): Command | nu
   const [action, target, ...paramCandidates] = text.replace(COMMAND_TRIGGER, '').trim().split(' ');
 
   const params = getCommandParams(paramCandidates);
+
+  if (params.ci === 'circleci' && !args.circleci_token) {
+    core.warning('BuildCommand: CircleCI token is not provided');
+  }
+
   switch (action) {
     case COMMAND_ACTIONS.CREATE:
       return new CreateCommand(target, args, params);
