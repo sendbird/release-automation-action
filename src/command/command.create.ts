@@ -18,10 +18,10 @@ export default class CreateCommand extends CommandAbstract {
     const owner_repo = `${github.context.repo.owner}/${github.context.repo.repo}`;
 
     this.log('Add a comment about preparing ticket creation');
-    await this.args.octokit.rest.issues.createComment({
-      ...github.context.repo,
-      issue_number: github.context.issue.number,
+    await this.upsertComment({
+      search: '[Creating Ticket] Preparing',
       body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${owner_repo}/actions/runs/${github.context.runId}`,
+      issueNumber: github.context.issue.number,
     });
 
     if (!isReleaseBranch(this.args.branch)) {
@@ -34,10 +34,10 @@ export default class CreateCommand extends CommandAbstract {
     const { workflowUrl } = await workflow.createTicket(this.args, this.params);
 
     this.log('Add a comment about processing ticket creation');
-    await this.args.octokit.rest.issues.createComment({
-      ...github.context.repo,
-      issue_number: github.context.issue.number,
+    await this.upsertComment({
+      search: '[Creating Ticket] In progress',
       body: `[Creating Ticket] In progress ${workflowUrl}`,
+      issueNumber: github.context.issue.number,
     });
   }
 }
