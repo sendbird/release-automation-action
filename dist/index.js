@@ -32608,10 +32608,10 @@ class CreateCommand extends command_1.CommandAbstract {
     async createTicket() {
         const owner_repo = `${github.context.repo.owner}/${github.context.repo.repo}`;
         this.log('Add a comment about preparing ticket creation');
-        await this.args.octokit.rest.issues.createComment({
-            ...github.context.repo,
-            issue_number: github.context.issue.number,
+        await this.upsertComment({
+            search: '[Creating Ticket] Preparing',
             body: `[Creating Ticket] Preparing ${github.context.serverUrl}/${owner_repo}/actions/runs/${github.context.runId}`,
+            issueNumber: github.context.issue.number,
         });
         if (!(0, utils_1.isReleaseBranch)(this.args.branch)) {
             return this.log("it's not releasable 🙅");
@@ -32622,10 +32622,10 @@ class CreateCommand extends command_1.CommandAbstract {
         this.log('Workflow request to create a ticket');
         const { workflowUrl } = await workflow_1.workflow.createTicket(this.args, this.params);
         this.log('Add a comment about processing ticket creation');
-        await this.args.octokit.rest.issues.createComment({
-            ...github.context.repo,
-            issue_number: github.context.issue.number,
+        await this.upsertComment({
+            search: '[Creating Ticket] In progress',
             body: `[Creating Ticket] In progress ${workflowUrl}`,
+            issueNumber: github.context.issue.number,
         });
     }
 }
@@ -32674,6 +32674,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommandAbstract = void 0;
+const github = __importStar(__nccwpck_require__(3228));
 const core = __importStar(__nccwpck_require__(7484));
 class CommandAbstract {
     constructor(target, args, params) {
@@ -32684,6 +32685,27 @@ class CommandAbstract {
     }
     log(message) {
         core.info(`${this.constructor.name}: ${message}`);
+    }
+    async upsertComment({ body, search, issueNumber }) {
+        const { data: comments } = await this.args.octokit.rest.issues.listComments({
+            ...github.context.repo,
+            issue_number: issueNumber,
+        });
+        const existingComment = comments.find((comment) => comment.body?.includes(search));
+        if (existingComment) {
+            await this.args.octokit.rest.issues.updateComment({
+                ...github.context.repo,
+                comment_id: existingComment.id,
+                body,
+            });
+        }
+        else {
+            await this.args.octokit.rest.issues.createComment({
+                ...github.context.repo,
+                issue_number: issueNumber,
+                body,
+            });
+        }
     }
 }
 exports.CommandAbstract = CommandAbstract;
