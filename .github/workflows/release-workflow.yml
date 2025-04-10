@@ -1,0 +1,22 @@
+name: Release workflow example
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_ticket_key:
+        description: 'Release ticket key'
+        required: true
+        type: string
+      is_test:
+        description: 'Is this a test?'
+        required: true
+        type: boolean
+
+jobs:
+  echo-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo inputs
+        run: |
+          echo "release_ticket_key: ${{ inputs.release_ticket_key }}"
+          echo "is_test: ${{ inputs.is_test }}"
