@@ -1,6 +1,6 @@
 {
   "name": "release-automation-action",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Sendbird Automate release process with GitHub Actions",
   "license": "MIT",
