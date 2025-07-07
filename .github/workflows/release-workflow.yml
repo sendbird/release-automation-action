@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Echo inputs
+        env:
+          RELEASE_TICKET_KEY: ${{ inputs.release_ticket_key }}
+          IS_TEST: ${{ inputs.is_test }}
         run: |
-          echo "release_ticket_key: ${{ inputs.release_ticket_key }}"
-          echo "is_test: ${{ inputs.is_test }}"
+          echo "release_ticket_key: $RELEASE_TICKET_KEY"
+          echo "is_test: $IS_TEST"

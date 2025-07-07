@@ -15,9 +15,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - run: |
-          git checkout -b release/${{ github.event.inputs.version }}
-          git push --set-upstream origin release/${{ github.event.inputs.version }}
+      - name: Create and push release branch
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          git checkout -b "release/$VERSION"
+          git push --set-upstream origin "release/$VERSION"
       - uses: actions/setup-node@v4
         with:
           node-version: 18.x
@@ -29,14 +32,18 @@ jobs:
       - name: 'publish to github'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
         run: |
-          yarn release-it ${{ github.event.inputs.version }} --ci
+          yarn release-it "$VERSION" --ci
       - name: Tag new target
-        run: git tag -f latest ${{ github.event.inputs.version }}
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: git tag -f latest "$VERSION"
       - name: Push new tag
         run: git push origin latest --force
       - name: 'create a pull request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
         run: |
-          gh pr create --title "chore(release): publish ${{ github.event.inputs.version }}" --body "created by automation"
+          gh pr create --title "chore(release): publish $VERSION" --body "created by automation"
