@@ -35,5 +35,5 @@ inputs:
     required: false
     description: 'Input CircleCI API token here'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
