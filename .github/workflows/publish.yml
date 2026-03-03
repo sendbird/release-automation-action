@@ -23,7 +23,7 @@ jobs:
           git push --set-upstream origin "release/$VERSION"
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20.x
       - run: yarn install --immutable
       - name: 'set environments'
         run: |
